@@ -8,7 +8,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     {
         const completionProvider = new MySQLCompletionProvider();
-        const triggerCharacters = ['"', "'"]; // Trigger the completion on the specified characters
+        const triggerCharacters = ['"', "`"]; // Trigger the completion on the specified characters
 
         const disposable = vscode.languages.registerCompletionItemProvider(
             "php",
