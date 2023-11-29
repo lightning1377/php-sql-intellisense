@@ -23,6 +23,33 @@
         "command": "cloudtree-intellisense.helloWorld",
         "title": "Hello World"
       }
+    ],
+    "configuration": [
+      {
+        "title": "SQL-PHP Intellisense",
+        "properties": {
+          "SQL-PHP.Intellisense.database.host": {
+            "type": "string",
+            "default": "localhost",
+            "description": "address of the db server"
+          },
+          "SQL-PHP.Intellisense.database.user": {
+            "type": "string",
+            "default": "root",
+            "description": "username of a db user"
+          },
+          "SQL-PHP.Intellisense.database.password": {
+            "type": "string",
+            "default": "",
+            "description": "password of the provided db user"
+          },
+          "SQL-PHP.Intellisense.database.name": {
+            "type": "string",
+            "default": "LocalTest",
+            "description": "name of database"
+          }
+        }
+      }
     ]
   },
   "scripts": {
