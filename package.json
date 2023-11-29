@@ -1,6 +1,6 @@
 {
   "name": "php-sql-intellisense",
-  "displayName": "PHP-SQL-Intellisense",
+  "displayName": "SQL-PHP Intellisense",
   "icon": "images/php_mysql.png",
   "publisher": "Siavash Kahe",
   "description": "provides intellisense for writing mysql queries in php",
