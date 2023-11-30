@@ -2,8 +2,8 @@
   "name": "php-sql-intellisense",
   "displayName": "SQL-PHP Intellisense",
   "icon": "images/php_mysql.png",
-  "publisher": "Siavash Kahe",
-  "description": "provides intellisense for writing mysql queries in php",
+  "publisher": "siavash",
+  "description": "Provides intellisense for writing mysql queries in php",
   "version": "0.0.1",
   "author": {
     "name": "Siavash Kahe",
@@ -13,15 +13,17 @@
     "vscode": "^1.84.0"
   },
   "categories": [
-    "Other"
+    "Linters"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onLanguage:php"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "cloudtree-intellisense.helloWorld",
-        "title": "Hello World"
+        "command": "SQL-PHP.Intellisense.lint",
+        "title": "Lint for mysql queries"
       }
     ],
     "configuration": [
