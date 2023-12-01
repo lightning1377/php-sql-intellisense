@@ -23,15 +23,17 @@ export function processQueryString(query: string, pointerIndex: number): { conte
     return { context, tableName };
 }
 export function processLine(line: string, pointerIndex: number) {
-    if (line.includes(`Database::prepare("`)) {
-        const startIndex = line.indexOf('"');
-        const endIndex = line.indexOf('"', startIndex + 1);
-        if (pointerIndex <= endIndex && pointerIndex > startIndex) {
-            const sqlString = line.substring(startIndex + 1, endIndex);
-            return processQueryString(sqlString, pointerIndex - (startIndex + 1) - 1);
-        }
+    const query = getContainedQuery(line);
+    if (query) {
+        const index = line.indexOf(query);
+        return processQueryString(query, pointerIndex - (index + 1) - 1);
     }
     return false;
+}
+function getContainedQuery(input: string) {
+    const regex = /\bDatabase::(prepare|getResults|getValue|getRow)\("([^"]*)"\)/;
+    const match = input.match(regex);
+    return match?.[2];
 }
 function getFirstKeywordBeforePointer(input: string, index: number) {
     let word = "",

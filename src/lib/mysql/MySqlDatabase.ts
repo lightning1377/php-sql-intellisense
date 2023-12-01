@@ -20,6 +20,7 @@ export class MySqlDatabase {
 
     public getTableNames = async () => {
         try {
+            console.log("getting table names");
             // Fetch table names from the database
             const results = await this.queryPromise("SHOW TABLES");
             const tableNames = results.map((row) => row[`Tables_in_${this.connection.config.database?.toLowerCase()}`]);
@@ -36,6 +37,7 @@ export class MySqlDatabase {
 
     public getFieldNames = async (tableName: string) => {
         try {
+            console.log("getting field names");
             const results = await this.queryPromise(`SHOW COLUMNS FROM ${tableName};`);
             const fieldNames = results.map((row) => row["Field"]);
             return fieldNames.map((fieldName) => {
