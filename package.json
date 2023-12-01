@@ -23,7 +23,13 @@
     "commands": [
       {
         "command": "SQL-PHP.Intellisense.lint",
+        "category": "SQL-PHP",
         "title": "Lint for mysql queries"
+      },
+      {
+        "command": "SQL-PHP.Intellisense.connect",
+        "category": "SQL-PHP",
+        "title": "Connect to database"
       }
     ],
     "configuration": [
@@ -34,16 +40,6 @@
             "type": "string",
             "default": "localhost",
             "description": "address of the db server"
-          },
-          "SQL-PHP.Intellisense.database.user": {
-            "type": "string",
-            "default": "root",
-            "description": "username of a db user"
-          },
-          "SQL-PHP.Intellisense.database.password": {
-            "type": "string",
-            "default": "",
-            "description": "password of the provided db user"
           },
           "SQL-PHP.Intellisense.database.name": {
             "type": "string",
