@@ -1,3 +1,3 @@
-export const tableNameKeywords = ["FROM", "JOIN"];
-export const fieldNameKeywords = ["SELECT"];
+export const tableNameKeywords = ["FROM", "JOIN", "INTO", "UPDATE"];
+export const fieldNameKeywords = ["SELECT", "SET"];
 export const allKeyWords = [...tableNameKeywords, ...fieldNameKeywords];
