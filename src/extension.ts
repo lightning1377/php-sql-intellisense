@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { MySQLCompletionProvider } from "./MySQLCompletionProvider";
+import { MySQLCompletionProvider } from "./lib/mysql/MySQLCompletionProvider";
 
 export function activate(context: vscode.ExtensionContext) {
     console.log("SQL-PHP Intellisense extension is now active!");
@@ -54,7 +54,7 @@ export function deactivate() {}
 async function getDbCredentials(context: vscode.ExtensionContext) {
     const user = await context.secrets.get("SQL-PHP.Intellisense.user");
     if (!user) {
-        const inputUser = await vscode.window.showInputBox({ title: "Database user" });
+        const inputUser = await vscode.window.showInputBox({ title: "Database user", ignoreFocusOut: true });
         if (inputUser) {
             await context.secrets.store("SQL-PHP.Intellisense.user", inputUser);
             return getDbCredentials(context);
@@ -62,7 +62,7 @@ async function getDbCredentials(context: vscode.ExtensionContext) {
     }
     const password = await context.secrets.get("SQL-PHP.Intellisense.password");
     if (!password) {
-        const inputPassword = await vscode.window.showInputBox({ title: "Database password" });
+        const inputPassword = await vscode.window.showInputBox({ title: "Database password", ignoreFocusOut: true });
         if (inputPassword) {
             await context.secrets.store("SQL-PHP.Intellisense.password", inputPassword);
             return getDbCredentials(context);

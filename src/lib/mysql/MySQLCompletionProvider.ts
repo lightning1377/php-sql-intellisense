@@ -1,6 +1,6 @@
 import { CompletionItemProvider, TextDocument, Position, CancellationToken } from "vscode";
-import { processLine } from "./lib/helpers";
-import { MySqlDatabase } from "./lib/database";
+import { processLine } from "../helpers";
+import { MySqlDatabase } from "./MySqlDatabase";
 import { ConnectionOptions } from "mysql2";
 
 export class MySQLCompletionProvider implements CompletionItemProvider {
@@ -15,6 +15,7 @@ export class MySQLCompletionProvider implements CompletionItemProvider {
             this.connected = true;
             return true;
         }
+        this.database.destroy();
         this.database = null;
         this.connected = false;
         return false;

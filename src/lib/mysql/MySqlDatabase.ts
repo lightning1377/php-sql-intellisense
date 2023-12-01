@@ -48,4 +48,17 @@ export class MySqlDatabase {
             return [];
         }
     };
+
+    // Destructor method to disconnect from the database when the instance is destroyed
+    public destroy = () => {
+        try {
+            this.connection.end((err) => {
+                if (err) {
+                    console.error("Error closing database connection:", err);
+                } else {
+                    console.log("Database connection closed.");
+                }
+            });
+        } catch (error) {}
+    };
 }
