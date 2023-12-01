@@ -10,8 +10,8 @@ export class MySQLCompletionProvider implements CompletionItemProvider {
     async connect(options: ConnectionOptions) {
         this.database = new MySqlDatabase(options);
         // test connection
-        const res = await this.database.getTableNames();
-        if (res.length) {
+        const connected = await this.database.getIsConnected();
+        if (connected === true) {
             this.connected = true;
             return true;
         }

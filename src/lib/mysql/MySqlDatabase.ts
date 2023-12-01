@@ -1,4 +1,4 @@
-import { Connection, ConnectionOptions, RowDataPacket, createConnection } from "mysql2";
+import { Connection, ConnectionOptions, QueryError, RowDataPacket, createConnection } from "mysql2";
 import { CompletionItem, CompletionItemKind } from "vscode";
 
 export class MySqlDatabase {
@@ -49,16 +49,25 @@ export class MySqlDatabase {
         }
     };
 
+    public getIsConnected = async () => {
+        return await new Promise<QueryError | true>((resolve) => {
+            this.connection.ping((err) => (err ? resolve(err) : resolve(true)));
+        });
+    };
+
     // Destructor method to disconnect from the database when the instance is destroyed
-    public destroy = () => {
+    public destroy = async () => {
         try {
-            this.connection.end((err) => {
-                if (err) {
-                    console.error("Error closing database connection:", err);
-                } else {
-                    console.log("Database connection closed.");
-                }
-            });
+            const connected = await this.getIsConnected();
+            if (connected === true) {
+                this.connection.end((err) => {
+                    if (err) {
+                        console.error("Error closing database connection:", err);
+                    } else {
+                        console.log("Database connection closed.");
+                    }
+                });
+            }
         } catch (error) {}
     };
 }
