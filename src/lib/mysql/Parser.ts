@@ -1,11 +1,13 @@
 import { allKeyWords, fieldNameKeywords } from "../constants";
-import { QueryContext } from "../types";
+
+type QueryContext = "table" | "field" | false;
 
 enum QueryKeyword {
     SELECT = "SELECT",
     FROM = "FROM",
     INSERT_INTO = "INSERT INTO",
-    UPDATE = "UPDATE"
+    UPDATE = "UPDATE",
+    VALUES = "VALUES"
 }
 
 const JOIN_KEYWORDS = ["JOIN", "LEFT JOIN", "RIGHT JOIN"];
@@ -38,7 +40,7 @@ export function parser(queryString: string, pointerIndex: number): ParsedQuery {
     if (query.startsWith(QueryKeyword.SELECT)) {
         parseSelectQuery(query);
     } else if (query.startsWith(QueryKeyword.INSERT_INTO)) {
-        // parse insert query
+        parseInsertQuery(query);
     } else if (query.startsWith(QueryKeyword.UPDATE)) {
         // parse update query
     }
@@ -55,6 +57,17 @@ export function parser(queryString: string, pointerIndex: number): ParsedQuery {
             const tablePart = query.substring(fromIndex + QueryKeyword.FROM.length).trim();
             parseJoinClauses(tablePart);
             parseContext(query, fromIndex);
+        }
+    }
+
+    function parseInsertQuery(query: string) {
+        if (pointerIndex > QueryKeyword.INSERT_INTO.length) {
+            const valuesIndex = query.indexOf(QueryKeyword.VALUES);
+            if (pointerIndex < valuesIndex) {
+                context = "table";
+            } else if (pointerIndex > valuesIndex + QueryKeyword.VALUES.length) {
+                context = "field";
+            }
         }
     }
 

@@ -1,28 +1,7 @@
-import { allKeyWords, fieldNameKeywords, tableNameKeywords } from "./constants";
 import { MySQLCompletionProvider } from "./mysql/MySQLCompletionProvider";
 import { parser } from "./mysql/Parser";
-import { QueryContext, TableName } from "./types";
 import * as vscode from "vscode";
 
-function processQueryString(query: string, pointerIndex: number): { context: QueryContext; tableName: TableName } {
-    let context: QueryContext = false,
-        tableName: string | false = false;
-
-    // const wordBeforePointer = getFirstKeywordBeforePointer(query, pointerIndex);
-    // if (allKeyWords.includes(wordBeforePointer)) {
-    //     if (fieldNameKeywords.includes(wordBeforePointer)) {
-    //         context = "field";
-    //     } else if (tableNameKeywords.includes(wordBeforePointer)) {
-    //         context = "table";
-    //     }
-    // }
-    // const FROM_INDEX = query.indexOf("FROM");
-    // if (FROM_INDEX !== -1) {
-    //     tableName = query.substring(FROM_INDEX).replace("FROM", "").trim().split(" ")[0];
-    //     tableName = tableName.split("`").join("");
-    // }
-    return { context, tableName };
-}
 export function processLine(line: string, pointerIndex: number) {
     const query = getContainedQuery(line);
     if (query) {
@@ -31,11 +10,13 @@ export function processLine(line: string, pointerIndex: number) {
     }
     return false;
 }
+
 function getContainedQuery(input: string) {
     const regex = /\bDatabase::(prepare|getResults|getValue|getRow)\("([^"]*)"\)/;
     const match = input.match(regex);
     return match?.[2];
 }
+
 export const onConnectCommand = async (completionProvider: MySQLCompletionProvider, context: vscode.ExtensionContext) => {
     // get extension db config
     const dbConfig = vscode.workspace.getConfiguration("SQL-PHP.Intellisense").get("database") as { host: string; name: string };
