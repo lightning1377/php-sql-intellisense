@@ -7,7 +7,8 @@ enum QueryKeyword {
     FROM = "FROM",
     INSERT_INTO = "INSERT INTO",
     UPDATE = "UPDATE",
-    VALUES = "VALUES"
+    VALUES = "VALUES",
+    SET = "SET"
 }
 
 const JOIN_KEYWORDS = ["JOIN", "LEFT JOIN", "RIGHT JOIN"];
@@ -42,7 +43,7 @@ export function parser(queryString: string, pointerIndex: number): ParsedQuery {
     } else if (query.startsWith(QueryKeyword.INSERT_INTO)) {
         parseInsertQuery(query);
     } else if (query.startsWith(QueryKeyword.UPDATE)) {
-        // parse update query
+        parseUpdateQuery(query);
     }
 
     return { fields, tables, context, fromTable };
@@ -58,15 +59,80 @@ export function parser(queryString: string, pointerIndex: number): ParsedQuery {
             parseJoinClauses(tablePart);
             parseContext(query, fromIndex);
         }
+
+        function parseContext(query: string, fromIndex: number) {
+            const indexOfCharacterBeforePointer = pointerIndex - 1;
+            const characterBeforePointer = queryString[indexOfCharacterBeforePointer];
+            const firstKeyword = getFirstKeywordBeforePointer(query, pointerIndex);
+            const isFieldContext = fieldNameKeywords.includes(firstKeyword);
+
+            if (!isFieldContext && fromIndex + QueryKeyword.FROM.length < pointerIndex) {
+                if ([",", " "].includes(characterBeforePointer)) {
+                    context = "table";
+                }
+            } else if (isFieldContext || fromIndex > pointerIndex) {
+                context = "field";
+                if (characterBeforePointer === ".") {
+                    let tableNameAliasStartIndex = indexOfCharacterBeforePointer;
+                    while (queryString[tableNameAliasStartIndex] !== " " && tableNameAliasStartIndex > 0) {
+                        tableNameAliasStartIndex--;
+                    }
+                    const tableNameAlias = queryString.substring(tableNameAliasStartIndex + 1, indexOfCharacterBeforePointer);
+                    const tableObj = tables.find((tb) => tb.name === tableNameAlias || tb.alias === tableNameAlias);
+                    if (tableObj) {
+                        fromTable = tableObj.name;
+                    }
+                } else if ([",", " "].includes(characterBeforePointer) && tables.length === 1) {
+                    fromTable = tables[0].name;
+                }
+            }
+        }
     }
 
     function parseInsertQuery(query: string) {
         if (pointerIndex > QueryKeyword.INSERT_INTO.length) {
             const valuesIndex = query.indexOf(QueryKeyword.VALUES);
-            if (pointerIndex < valuesIndex) {
-                context = "table";
-            } else if (pointerIndex > valuesIndex + QueryKeyword.VALUES.length) {
-                context = "field";
+            parseContext(query, valuesIndex);
+        }
+
+        function parseContext(query: string, valuesIndex: number) {
+            const indexOfCharacterBeforePointer = pointerIndex - 1;
+            const characterBeforePointer = queryString[indexOfCharacterBeforePointer];
+            const tablePart = query.substring(QueryKeyword.INSERT_INTO.length, valuesIndex).trim();
+            const regex = /\(([^)]+)\)/;
+            const match = tablePart.match(regex);
+            const specificColumnsPart = match ? `(${match[1]})` : null;
+            const indexOfSpecificColumnsPart = query.indexOf(specificColumnsPart ?? "");
+            const isFieldContext = specificColumnsPart ? pointerIndex > indexOfSpecificColumnsPart && pointerIndex < indexOfSpecificColumnsPart + specificColumnsPart.length : false;
+            if (!isFieldContext && (valuesIndex === -1 || pointerIndex < valuesIndex)) {
+                if ([",", " "].includes(characterBeforePointer)) {
+                    context = "table";
+                }
+            } else if (isFieldContext || pointerIndex > valuesIndex + QueryKeyword.VALUES.length) {
+                if ([",", " "].includes(characterBeforePointer)) {
+                    context = "field";
+                    fromTable = tablePart.replace(specificColumnsPart ?? "", "");
+                }
+            }
+        }
+    }
+
+    function parseUpdateQuery(query: string) {
+        if (pointerIndex > QueryKeyword.UPDATE.length) {
+            const setIndex = query.indexOf(QueryKeyword.SET);
+            parseContext(query, setIndex);
+        }
+        function parseContext(query: string, setIndex: number) {
+            const indexOfCharacterBeforePointer = pointerIndex - 1;
+            const characterBeforePointer = queryString[indexOfCharacterBeforePointer];
+            const tablePart = query.substring(QueryKeyword.UPDATE.length, setIndex).trim();
+            if ([",", " "].includes(characterBeforePointer)) {
+                if (setIndex === -1 || pointerIndex < setIndex) {
+                    context = "table";
+                } else {
+                    context = "field";
+                    fromTable = tablePart;
+                }
             }
         }
     }
@@ -92,38 +158,10 @@ export function parser(queryString: string, pointerIndex: number): ParsedQuery {
             const alias = joinParts[2] || "";
             tables.push({ name, alias });
         } while (index < tablePart.length);
-    }
 
-    function parseContext(query: string, fromIndex: number) {
-        const indexOfCharacterBeforePointer = pointerIndex - 1;
-        const characterBeforePointer = queryString[indexOfCharacterBeforePointer];
-        const firstKeyword = getFirstKeywordBeforePointer(query, pointerIndex);
-        const isFieldContext = fieldNameKeywords.includes(firstKeyword);
-
-        if (!isFieldContext && fromIndex + QueryKeyword.FROM.length < pointerIndex) {
-            if ([",", " "].includes(characterBeforePointer)) {
-                context = "table";
-            }
-        } else if (isFieldContext || fromIndex > pointerIndex) {
-            context = "field";
-            if (characterBeforePointer === ".") {
-                let tableNameAliasStartIndex = indexOfCharacterBeforePointer;
-                while (queryString[tableNameAliasStartIndex] !== " " && tableNameAliasStartIndex > 0) {
-                    tableNameAliasStartIndex--;
-                }
-                const tableNameAlias = queryString.substring(tableNameAliasStartIndex + 1, indexOfCharacterBeforePointer);
-                const tableObj = tables.find((tb) => tb.name === tableNameAlias || tb.alias === tableNameAlias);
-                if (tableObj) {
-                    fromTable = tableObj.name;
-                }
-            } else if ([",", " "].includes(characterBeforePointer) && tables.length === 1) {
-                fromTable = tables[0].name;
-            }
+        function getFirstJoinClause(input: string): string | undefined {
+            return JOIN_KEYWORDS.find((keyword) => input.includes(keyword));
         }
-    }
-
-    function getFirstJoinClause(input: string): string | undefined {
-        return JOIN_KEYWORDS.find((keyword) => input.includes(keyword));
     }
 
     function getFirstKeywordBeforePointer(input: string, index: number): string {
@@ -137,24 +175,24 @@ export function parser(queryString: string, pointerIndex: number): ParsedQuery {
         }
 
         return word.trim();
-    }
 
-    function getWordBeforePointer(input: string, pointerIndex: number, trim = true) {
-        if (pointerIndex < 0 || pointerIndex >= input.length) {
-            return "";
+        function getWordBeforePointer(input: string, pointerIndex: number, trim = true) {
+            if (pointerIndex < 0 || pointerIndex >= input.length) {
+                return "";
+            }
+
+            let startIndex = pointerIndex - 1;
+            while (startIndex >= 0 && input[startIndex] === " ") {
+                startIndex--;
+            }
+
+            while (startIndex >= 0 && input[startIndex] !== " ") {
+                startIndex--;
+            }
+
+            const wordBeforePointer = input.slice(startIndex + 1, pointerIndex);
+
+            return trim ? wordBeforePointer.trim() : wordBeforePointer;
         }
-
-        let startIndex = pointerIndex - 1;
-        while (startIndex >= 0 && input[startIndex] === " ") {
-            startIndex--;
-        }
-
-        while (startIndex >= 0 && input[startIndex] !== " ") {
-            startIndex--;
-        }
-
-        const wordBeforePointer = input.slice(startIndex + 1, pointerIndex);
-
-        return trim ? wordBeforePointer.trim() : wordBeforePointer;
     }
 }
