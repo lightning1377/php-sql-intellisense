@@ -38,17 +38,20 @@ export function parser(queryString: string, pointerIndex: number): ParsedQuery {
     let context: QueryContext = false;
     let fromTable: string = "";
 
+    const indexOfCharacterBeforePointer = pointerIndex - 1;
+    const characterBeforePointer = queryString[indexOfCharacterBeforePointer];
+
     if (query.startsWith(QueryKeyword.SELECT)) {
-        parseSelectQuery(query);
+        parseSelectQuery(query, pointerIndex);
     } else if (query.startsWith(QueryKeyword.INSERT_INTO)) {
-        parseInsertQuery(query);
+        parseInsertQuery(query, pointerIndex);
     } else if (query.startsWith(QueryKeyword.UPDATE)) {
-        parseUpdateQuery(query);
+        parseUpdateQuery(query, pointerIndex);
     }
 
     return { fields, tables, context, fromTable };
 
-    function parseSelectQuery(query: string) {
+    function parseSelectQuery(query: string, _pointerIndex: number) {
         const fromIndex = query.indexOf(QueryKeyword.FROM);
         if (fromIndex !== -1) {
             const selectPart = query.substring(QueryKeyword.SELECT.length, fromIndex).trim();
@@ -61,16 +64,14 @@ export function parser(queryString: string, pointerIndex: number): ParsedQuery {
         }
 
         function parseContext(query: string, fromIndex: number) {
-            const indexOfCharacterBeforePointer = pointerIndex - 1;
-            const characterBeforePointer = queryString[indexOfCharacterBeforePointer];
-            const firstKeyword = getFirstKeywordBeforePointer(query, pointerIndex);
+            const firstKeyword = getFirstKeywordBeforePointer(query, _pointerIndex);
             const isFieldContext = fieldNameKeywords.includes(firstKeyword);
 
-            if (!isFieldContext && fromIndex + QueryKeyword.FROM.length < pointerIndex) {
+            if (!isFieldContext && fromIndex + QueryKeyword.FROM.length < _pointerIndex) {
                 if ([",", " "].includes(characterBeforePointer)) {
                     context = "table";
                 }
-            } else if (isFieldContext || fromIndex > pointerIndex) {
+            } else if (isFieldContext || fromIndex > _pointerIndex) {
                 context = "field";
                 if (characterBeforePointer === ".") {
                     let tableNameAliasStartIndex = indexOfCharacterBeforePointer;
@@ -89,45 +90,49 @@ export function parser(queryString: string, pointerIndex: number): ParsedQuery {
         }
     }
 
-    function parseInsertQuery(query: string) {
-        if (pointerIndex > QueryKeyword.INSERT_INTO.length) {
+    function parseInsertQuery(query: string, _pointerIndex: number) {
+        if (_pointerIndex > QueryKeyword.INSERT_INTO.length) {
             const valuesIndex = query.indexOf(QueryKeyword.VALUES);
-            parseContext(query, valuesIndex);
+            const selectIndex = query.indexOf(QueryKeyword.SELECT);
+            parseContext(query, valuesIndex, selectIndex);
         }
 
-        function parseContext(query: string, valuesIndex: number) {
-            const indexOfCharacterBeforePointer = pointerIndex - 1;
-            const characterBeforePointer = queryString[indexOfCharacterBeforePointer];
+        function parseContext(query: string, valuesIndex: number, selectIndex: number) {
             const tablePart = query.substring(QueryKeyword.INSERT_INTO.length, valuesIndex).trim();
             const regex = /\(([^)]+)\)/;
             const match = tablePart.match(regex);
             const specificColumnsPart = match ? `(${match[1]})` : null;
             const indexOfSpecificColumnsPart = query.indexOf(specificColumnsPart ?? "");
-            const isFieldContext = specificColumnsPart ? pointerIndex > indexOfSpecificColumnsPart && pointerIndex < indexOfSpecificColumnsPart + specificColumnsPart.length : false;
-            if (!isFieldContext && (valuesIndex === -1 || pointerIndex < valuesIndex)) {
+            const isFieldContext = indexOfSpecificColumnsPart > 0 && specificColumnsPart ? _pointerIndex > indexOfSpecificColumnsPart && _pointerIndex < indexOfSpecificColumnsPart + specificColumnsPart.length : false;
+            if (!isFieldContext && ((valuesIndex === -1 && selectIndex === -1) || _pointerIndex < valuesIndex || _pointerIndex < selectIndex)) {
                 if ([",", " "].includes(characterBeforePointer)) {
                     context = "table";
                 }
-            } else if (isFieldContext || pointerIndex > valuesIndex + QueryKeyword.VALUES.length) {
-                if ([",", " "].includes(characterBeforePointer)) {
-                    context = "field";
-                    fromTable = tablePart.replace(specificColumnsPart ?? "", "");
+            } else if (isFieldContext || (valuesIndex !== -1 && _pointerIndex > valuesIndex + QueryKeyword.VALUES.length) || (selectIndex !== -1 && _pointerIndex > selectIndex + QueryKeyword.SELECT.length)) {
+                if (selectIndex === -1 || _pointerIndex < selectIndex) {
+                    if ([",", " "].includes(characterBeforePointer)) {
+                        context = "field";
+                        fromTable = tablePart.replace(specificColumnsPart ?? "", "");
+                    }
+                } else if (_pointerIndex > selectIndex + QueryKeyword.SELECT.length) {
+                    const selectQuery = query.substring(selectIndex);
+                    parseSelectQuery(selectQuery, pointerIndex - selectIndex);
                 }
             }
         }
     }
 
-    function parseUpdateQuery(query: string) {
-        if (pointerIndex > QueryKeyword.UPDATE.length) {
+    function parseUpdateQuery(query: string, _pointerIndex: number) {
+        if (_pointerIndex > QueryKeyword.UPDATE.length) {
             const setIndex = query.indexOf(QueryKeyword.SET);
             parseContext(query, setIndex);
         }
         function parseContext(query: string, setIndex: number) {
-            const indexOfCharacterBeforePointer = pointerIndex - 1;
+            const indexOfCharacterBeforePointer = _pointerIndex - 1;
             const characterBeforePointer = queryString[indexOfCharacterBeforePointer];
             const tablePart = query.substring(QueryKeyword.UPDATE.length, setIndex).trim();
             if ([",", " "].includes(characterBeforePointer)) {
-                if (setIndex === -1 || pointerIndex < setIndex) {
+                if (setIndex === -1 || _pointerIndex < setIndex) {
                     context = "table";
                 } else {
                     context = "field";
