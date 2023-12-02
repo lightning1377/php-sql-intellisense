@@ -1,9 +1,10 @@
 import { allKeyWords, fieldNameKeywords, tableNameKeywords } from "./constants";
 import { MySQLCompletionProvider } from "./mysql/MySQLCompletionProvider";
+import { parser } from "./mysql/Parser";
 import { QueryContext, TableName } from "./types";
 import * as vscode from "vscode";
 
-export function processQueryString(query: string, pointerIndex: number): { context: QueryContext; tableName: TableName } {
+function processQueryString(query: string, pointerIndex: number): { context: QueryContext; tableName: TableName } {
     let context: QueryContext = false,
         tableName: string | false = false;
 
@@ -26,6 +27,8 @@ export function processLine(line: string, pointerIndex: number) {
     const query = getContainedQuery(line);
     if (query) {
         const index = line.indexOf(query);
+        const parsed = parser(query, pointerIndex);
+        console.log({ parsed });
         return processQueryString(query, pointerIndex - (index + 1) - 1);
     }
     return false;
