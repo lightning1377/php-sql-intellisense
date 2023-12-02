@@ -1,3 +1,4 @@
+import { allKeyWords, fieldNameKeywords } from "../constants";
 import { QueryContext } from "../types";
 
 export function parser(queryString: string, pointerIndex: number) {
@@ -5,6 +6,7 @@ export function parser(queryString: string, pointerIndex: number) {
     const fields: { sourceTable: string; name: string; alias: string }[] = [];
     const tables: { name: string; alias: string }[] = [];
     let context: QueryContext = false;
+    let fromTable: string = "";
     if (query.startsWith("SELECT")) {
         // parse select query
         if (query.includes("FROM")) {
@@ -41,6 +43,34 @@ export function parser(queryString: string, pointerIndex: number) {
 
                 tables.push({ name, alias });
             } while (index < tablePart.length);
+
+            const indexOfCharacterBeforePointer = pointerIndex - 1;
+            const characterBeforePointer = queryString[indexOfCharacterBeforePointer];
+            const FROM_INDEX = queryString.indexOf("FROM");
+            const firstKeyword = getFirstKeywordBeforePointer(queryString, pointerIndex);
+            const isFieldContext = fieldNameKeywords.includes(firstKeyword);
+            if (!isFieldContext && FROM_INDEX + "FROM".length < pointerIndex) {
+                // pointer is after FROM
+                if ([",", " "].includes(characterBeforePointer)) {
+                    context = "table";
+                }
+            } else if (isFieldContext || FROM_INDEX > pointerIndex) {
+                // pointer is before FROM
+                context = "field";
+                if (characterBeforePointer === ".") {
+                    let tableNameAliasStartIndex = indexOfCharacterBeforePointer;
+                    while (queryString[tableNameAliasStartIndex] !== " " && tableNameAliasStartIndex > 0) {
+                        tableNameAliasStartIndex--;
+                    }
+                    const tableNameAlias = queryString.substring(tableNameAliasStartIndex + 1, indexOfCharacterBeforePointer);
+                    const tableObj = tables.find((tb) => tb.name === tableNameAlias || tb.alias === tableNameAlias);
+                    if (tableObj) {
+                        fromTable = tableObj.name;
+                    }
+                } else if ([",", " "].includes(characterBeforePointer) && tables.length === 1) {
+                    fromTable = tables[0].name;
+                }
+            }
         }
     } else if (query.startsWith("INSERT INTO")) {
         if (query.includes("SELECT")) {
@@ -52,7 +82,7 @@ export function parser(queryString: string, pointerIndex: number) {
         // parse update query
     }
 
-    return { fields, tables };
+    return { fields, tables, context, fromTable };
 }
 
 function getFirstJoinClause(input: string) {
@@ -67,5 +97,37 @@ function getFirstJoinClause(input: string) {
             return "RIGHT JOIN";
         }
         return "JOIN";
+    }
+}
+
+function getFirstKeywordBeforePointer(input: string, index: number) {
+    let word = "",
+        nextIndex = index;
+    while (nextIndex > 0 && !allKeyWords.includes(word)) {
+        word = getWordBeforePointer(input, nextIndex, false);
+        nextIndex -= word.length;
+        word = word.trim();
+    }
+    return word.trim();
+
+    function getWordBeforePointer(input: string, pointerIndex: number, trim = true) {
+        if (pointerIndex < 0 || pointerIndex >= input.length) {
+            // Invalid pointer index
+            return "";
+        }
+
+        // Find the start of the word before the pointer
+        let startIndex = pointerIndex - 1;
+        while (startIndex >= 0 && input[startIndex] === " ") {
+            startIndex--;
+        }
+        while (startIndex >= 0 && input[startIndex] !== " ") {
+            startIndex--;
+        }
+
+        // Extract the word
+        const wordBeforePointer = input.slice(startIndex + 1, pointerIndex);
+
+        return trim ? wordBeforePointer.trim() : wordBeforePointer;
     }
 }
