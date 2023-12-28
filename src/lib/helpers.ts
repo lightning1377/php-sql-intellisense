@@ -40,7 +40,7 @@ export async function getDbCredentials(context: vscode.ExtensionContext) {
 }
 
 export function extractSQLQueries(text: string): string[] {
-    const sqlQueryRegex = /Database::(prepare|getResults|getValue|getRow)\("([^"]+)"\)/g;
+    const sqlQueryRegex = /Database::(prepare|getResults|getValue|getRow)\("([^"]+)"/g;
     const matches: string[] = [];
     let match;
 

@@ -50,6 +50,12 @@ export class MySQLLinter {
 
         const documentText = document.getText();
         const queries = extractSQLQueries(documentText);
+
+        if (!queries.length) {
+            this.outputChannel.appendLine("Could not find any valid queries in document");
+            return;
+        }
+
         const dbTables: string[] = (await this.database.getTableNames()).map((item) => item.insertText as string);
         const dbFields: Record<string, string[]> = {};
 
@@ -91,10 +97,14 @@ export class MySQLLinter {
 
             // Create a diagnostic collection for the current document
             if (!this.diagnosticCollection) {
-                this.diagnosticCollection = languages.createDiagnosticCollection(document.uri.toString());
+                if (document.uri) {
+                    this.diagnosticCollection = languages.createDiagnosticCollection(document.uri.toString());
+                } else {
+                    this.outputChannel.appendLine("Could not create diagnostics collection for document");
+                }
             }
 
-            this.diagnosticCollection.set(document.uri, diagnostics);
+            this.diagnosticCollection?.set(document.uri, diagnostics);
         }
     }
 }

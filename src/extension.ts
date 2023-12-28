@@ -7,7 +7,7 @@ import { MySqlDatabase } from "./lib/mysql/MySqlDatabase";
 export function activate(context: vscode.ExtensionContext) {
     // Create an output channel
     const outputChannel = vscode.window.createOutputChannel("SQL-PHP Intellisense");
-    outputChannel.append("SQL-PHP Intellisense extension is now active!");
+    outputChannel.appendLine("SQL-PHP Intellisense extension is now active!");
     // Show the output channel in the UI
     outputChannel.show();
     // Dispose of the output channel when it's no longer needed
