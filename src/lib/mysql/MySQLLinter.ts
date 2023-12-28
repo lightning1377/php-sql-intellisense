@@ -1,22 +1,19 @@
 import { Parser } from "node-sql-parser";
 import { MySqlDatabase } from "./MySqlDatabase";
+import { extractSQLQueries } from "../helpers";
+import { Diagnostic, DiagnosticCollection, DiagnosticSeverity, Range, TextDocument, languages } from "vscode";
 
 export class MySQLLinter {
     private database: MySqlDatabase | undefined;
     private parser = new Parser();
+    private diagnosticCollection: DiagnosticCollection | undefined;
 
     public setDb(database: MySqlDatabase) {
         this.database = database;
     }
 
-    public async parseDocument() {
-        if (!this.database) {
-            return;
-        }
-        const tcAst = this.parser.parse("SELECT * FROM logs AS l LEFT JOIN players AS p ON p.player_id = l.player_id");
-
-        console.log(tcAst);
-        // Database::prepare("SELECT gbc.`apply_filter` FROM `game_config` AS gc LEFT JOIN `game_board_config` AS gbc ON gc.`game_board` = gbc.`row_id`")
+    private parseQuery(query: string) {
+        const tcAst = this.parser.parse(query.split("\n").join(""));
 
         const tables = tcAst.tableList.map((tableAst) => {
             const [queryType, _, tableName] = tableAst.split("::");
@@ -28,30 +25,64 @@ export class MySQLLinter {
             return { tableName, fieldName };
         });
 
-        const dbTables = (await this.database.getTableNames()).map((item) => item.insertText);
+        return { tables, fields };
+    }
 
-        if (tables.find((table) => !dbTables.includes(table))) {
-            console.log("a table was not found");
-        } else {
-            console.log("tables were found");
+    public async parseDocument(document: TextDocument) {
+        // Clear current diagnostics collection
+        this.diagnosticCollection?.clear();
+
+        if (!this.database) {
+            return;
         }
 
+        const documentText = document.getText();
+        const queries = extractSQLQueries(documentText);
+        const dbTables: string[] = (await this.database.getTableNames()).map((item) => item.insertText as string);
         const dbFields: Record<string, string[]> = {};
-        for (const tableName of fields.map((fieldData) => fieldData.tableName)) {
-            if (!tableName) {
-                continue;
-            }
-            if (!(tableName in dbFields)) {
-                dbFields[tableName] = (await this.database.getFieldNames(tableName)).map((item) => item.insertText as string);
-            }
-        }
 
-        for (const { tableName, fieldName } of fields) {
-            if (fieldName !== "(.*)" && !dbFields[tableName].includes(fieldName)) {
-                console.log("field name not found", fieldName);
-            } else {
-                console.log("field name found", fieldName);
+        const diagnostics: Diagnostic[] = [];
+
+        for (const query of queries) {
+            const queryStartIndex = documentText.indexOf(query);
+            const queryEndIndex = queryStartIndex + query.length;
+
+            const { tables, fields } = this.parseQuery(query);
+
+            // check query table names
+            for (const table of tables) {
+                if (!dbTables.includes(table)) {
+                    const tableStartIndex = documentText.indexOf(table, queryStartIndex);
+                    const tableEndIndex = tableStartIndex + table.length;
+                    diagnostics.push(new Diagnostic(new Range(document.positionAt(tableStartIndex), document.positionAt(tableEndIndex)), `Table name not found in database: ${table}`, DiagnosticSeverity.Error));
+                }
             }
+
+            // get db field names
+            for (const tableName of fields.map((fieldData) => fieldData.tableName)) {
+                if (tableName === "null") {
+                    continue;
+                }
+                if (!(tableName in dbFields) && dbTables.includes(tableName)) {
+                    dbFields[tableName] = (await this.database.getFieldNames(tableName)).map((item) => item.insertText as string);
+                }
+            }
+
+            // check query field names
+            for (const { tableName, fieldName } of fields) {
+                if (fieldName !== "(.*)" && tableName in dbFields && !dbFields[tableName].includes(fieldName)) {
+                    const fieldNameStartIndex = documentText.indexOf(fieldName, queryStartIndex);
+                    const fieldNameEndIndex = fieldNameStartIndex + fieldName.length;
+                    diagnostics.push(new Diagnostic(new Range(document.positionAt(fieldNameStartIndex), document.positionAt(fieldNameEndIndex)), `Field name '${fieldName}' not found in table '${tableName}'`, DiagnosticSeverity.Error));
+                }
+            }
+
+            // Create a diagnostic collection for the current document
+            if (!this.diagnosticCollection) {
+                this.diagnosticCollection = languages.createDiagnosticCollection(document.uri.toString());
+            }
+
+            this.diagnosticCollection.set(document.uri, diagnostics);
         }
     }
 }

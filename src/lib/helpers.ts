@@ -38,3 +38,15 @@ export async function getDbCredentials(context: vscode.ExtensionContext) {
         return { user, password };
     }
 }
+
+export function extractSQLQueries(text: string): string[] {
+    const sqlQueryRegex = /Database::prepare\("([^"]+)"\)/g;
+    const matches: string[] = [];
+    let match;
+
+    while ((match = sqlQueryRegex.exec(text)) !== null) {
+        matches.push(match[1]);
+    }
+
+    return matches;
+}

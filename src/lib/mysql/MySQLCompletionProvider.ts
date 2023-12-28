@@ -14,7 +14,6 @@ export class MySQLCompletionProvider implements CompletionItemProvider {
         }
         const line = document.lineAt(position).text;
         const res = processLine(line, position.character);
-        console.log({ res });
 
         if (!res || !res.context) {
             return [];

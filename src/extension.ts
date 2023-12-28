@@ -23,7 +23,22 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Register Command for Linting
     const disposableLinting = vscode.commands.registerCommand("SQL-PHP.Intellisense.lint", () => {
-        linter.parseDocument();
+        // Get the active text editor
+        const document = vscode.window.activeTextEditor?.document;
+
+        // Check if there is an active text editor and it has a document
+        if (document) {
+            linter.parseDocument(document);
+        } else {
+            vscode.window.showWarningMessage("No active document found.");
+        }
+    });
+
+    // Register event handler for document save
+    vscode.workspace.onDidSaveTextDocument((document) => {
+        if (document.languageId === "php") {
+            linter.parseDocument(document);
+        }
     });
 
     context.subscriptions.push(disposableLinting);
