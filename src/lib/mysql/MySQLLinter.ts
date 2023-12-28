@@ -1,12 +1,17 @@
 import { Parser } from "node-sql-parser";
 import { MySqlDatabase } from "./MySqlDatabase";
 import { extractSQLQueries } from "../helpers";
-import { Diagnostic, DiagnosticCollection, DiagnosticSeverity, Range, TextDocument, languages } from "vscode";
+import { Diagnostic, DiagnosticCollection, DiagnosticSeverity, OutputChannel, Range, TextDocument, languages } from "vscode";
 
 export class MySQLLinter {
     private database: MySqlDatabase | undefined;
     private parser = new Parser();
     private diagnosticCollection: DiagnosticCollection | undefined;
+    private outputChannel: OutputChannel;
+
+    constructor(outputChannel: OutputChannel) {
+        this.outputChannel = outputChannel;
+    }
 
     public setDb(database: MySqlDatabase) {
         this.database = database;
@@ -17,7 +22,7 @@ export class MySQLLinter {
         try {
             tcAst = this.parser.parse(query.split("\n").join(""));
         } catch (error) {
-            console.log("Could not parse sql query: ", query, error);
+            this.outputChannel.appendLine("Could not parse sql query: " + query + "\n" + (error as Error).message);
             return { tables: [], fields: [] };
         }
 

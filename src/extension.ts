@@ -5,7 +5,13 @@ import { MySQLLinter } from "./lib/mysql/MySQLLinter";
 import { MySqlDatabase } from "./lib/mysql/MySqlDatabase";
 
 export function activate(context: vscode.ExtensionContext) {
-    console.log("SQL-PHP Intellisense extension is now active!");
+    // Create an output channel
+    const outputChannel = vscode.window.createOutputChannel("SQL-PHP Intellisense");
+    outputChannel.append("SQL-PHP Intellisense extension is now active!");
+    // Show the output channel in the UI
+    outputChannel.show();
+    // Dispose of the output channel when it's no longer needed
+    context.subscriptions.push(outputChannel);
 
     // Create db helper
     let database: MySqlDatabase | null = null;
@@ -19,7 +25,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(disposableCompletion);
 
     // Register Linter
-    const linter = new MySQLLinter();
+    const linter = new MySQLLinter(outputChannel);
 
     // Register Command for Linting
     const disposableLinting = vscode.commands.registerCommand("SQL-PHP.Intellisense.lint", () => {
