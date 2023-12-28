@@ -45,7 +45,7 @@ export function extractSQLQueries(text: string): string[] {
     let match;
 
     while ((match = sqlQueryRegex.exec(text)) !== null) {
-        matches.push(match[1]);
+        matches.push(match[2]);
     }
 
     return matches;

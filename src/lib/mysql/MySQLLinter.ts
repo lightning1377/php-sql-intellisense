@@ -13,7 +13,13 @@ export class MySQLLinter {
     }
 
     private parseQuery(query: string) {
-        const tcAst = this.parser.parse(query.split("\n").join(""));
+        let tcAst;
+        try {
+            tcAst = this.parser.parse(query.split("\n").join(""));
+        } catch (error) {
+            console.log("Could not parse sql query: ", query, error);
+            return { tables: [], fields: [] };
+        }
 
         const tables = tcAst.tableList.map((tableAst) => {
             const [queryType, _, tableName] = tableAst.split("::");
@@ -22,7 +28,8 @@ export class MySQLLinter {
 
         const fields = tcAst.columnList.map((fieldAst) => {
             const [queryType, tableName, fieldName] = fieldAst.split("::");
-            return { tableName, fieldName };
+            const finalTableName = tableName === "null" && tables.length === 1 ? tables[0] : tableName;
+            return { tableName: finalTableName, fieldName };
         });
 
         return { tables, fields };
