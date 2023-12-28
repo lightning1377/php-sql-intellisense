@@ -1,9 +1,14 @@
 import * as vscode from "vscode";
 import { MySQLCompletionProvider } from "./lib/mysql/MySQLCompletionProvider";
-import { onConnectCommand } from "./lib/helpers";
+import { getDbCredentials } from "./lib/helpers";
+import { MySQLLinter } from "./lib/mysql/MySQLLinter";
+import { MySqlDatabase } from "./lib/mysql/MySqlDatabase";
 
 export function activate(context: vscode.ExtensionContext) {
     console.log("SQL-PHP Intellisense extension is now active!");
+
+    // Create db helper
+    let database: MySqlDatabase | null = null;
 
     // Register Completion Provider
     const completionProvider = new MySQLCompletionProvider();
@@ -13,17 +18,47 @@ export function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(disposableCompletion);
 
+    // Register Linter
+    const linter = new MySQLLinter();
+
     // Register Command for Linting
     const disposableLinting = vscode.commands.registerCommand("SQL-PHP.Intellisense.lint", () => {
-        // Display a message box to the user
-        vscode.window.showInformationMessage("Linting is not implemented yet");
+        linter.parseDocument();
     });
 
     context.subscriptions.push(disposableLinting);
 
     context.subscriptions.push(
-        vscode.commands.registerCommand("SQL-PHP.Intellisense.connect", () => {
-            onConnectCommand(completionProvider, context);
+        vscode.commands.registerCommand("SQL-PHP.Intellisense.connect", async () => {
+            if (database) {
+                database.destroy();
+            }
+            // get extension db config
+            const dbConfig = vscode.workspace.getConfiguration("SQL-PHP.Intellisense").get("database") as { host: string; name: string };
+            const connectionOptions = {
+                host: dbConfig.host,
+                database: dbConfig.name,
+                user: "",
+                password: ""
+            };
+            // get credentials for connecting to db
+            const credentials = await getDbCredentials(context);
+            if (credentials) {
+                connectionOptions.user = credentials.user;
+                connectionOptions.password = credentials.password;
+            }
+            database = new MySqlDatabase(connectionOptions);
+
+            const status = await database.getIsConnected();
+            if (status) {
+                vscode.window.showInformationMessage("Successfully connected to database");
+                linter.setDb(database);
+                completionProvider.setDb(database);
+            } else {
+                vscode.window.showInformationMessage("Could not connect to database");
+                await context.secrets.delete("SQL-PHP.Intellisense.user");
+                await context.secrets.delete("SQL-PHP.Intellisense.password");
+            }
         })
     );
 }
