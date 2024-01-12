@@ -2,18 +2,12 @@ import { parser } from "./mysql/Parser";
 import * as vscode from "vscode";
 
 export function processLine(line: string, pointerIndex: number) {
-    const query = getContainedQuery(line);
+    const query = extractSQLQueries(line)[0];
     if (query) {
         const index = line.indexOf(query);
         return parser(query, pointerIndex - (index + 1));
     }
     return false;
-}
-
-function getContainedQuery(input: string) {
-    const regex = /\bDatabase::(prepare|getResults|getValue|getRow)\("([^"]*)"\)/;
-    const match = input.match(regex);
-    return match?.[2];
 }
 
 export async function getDbCredentials(context: vscode.ExtensionContext) {

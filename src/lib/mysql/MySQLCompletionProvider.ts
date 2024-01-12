@@ -1,10 +1,16 @@
-import { CompletionItemProvider, TextDocument, Position, CancellationToken } from "vscode";
+import { CompletionItemProvider, TextDocument, Position, CancellationToken, OutputChannel } from "vscode";
 import { processLine } from "../helpers";
 import { MySqlDatabase } from "./MySqlDatabase";
 
 export class MySQLCompletionProvider implements CompletionItemProvider {
     private database: MySqlDatabase | null = null;
     public connected = false;
+    private outputChannel: OutputChannel;
+
+    constructor(outputChannel: OutputChannel) {
+        this.outputChannel = outputChannel;
+    }
+
     public setDb(database: MySqlDatabase) {
         this.database = database;
     }
