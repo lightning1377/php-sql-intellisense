@@ -2,7 +2,7 @@
   "name": "php-sql-intellisense",
   "displayName": "SQL-PHP Intellisense",
   "icon": "images/php_mysql.png",
-  "publisher": "siavash",
+  "publisher": "Siavash",
   "description": "Provides intellisense for writing mysql queries in php",
   "version": "0.0.1",
   "author": {
