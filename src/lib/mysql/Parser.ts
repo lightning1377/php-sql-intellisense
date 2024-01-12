@@ -110,7 +110,7 @@ export function parser(queryString: string, pointerIndex: number): ParsedQuery {
                 }
             } else if (isFieldContext || (valuesIndex !== -1 && _pointerIndex > valuesIndex + QueryKeyword.VALUES.length) || (selectIndex !== -1 && _pointerIndex > selectIndex + QueryKeyword.SELECT.length)) {
                 if (selectIndex === -1 || _pointerIndex < selectIndex) {
-                    if ([",", " "].includes(characterBeforePointer)) {
+                    if ([",", " ", "("].includes(characterBeforePointer)) {
                         context = "field";
                         fromTable = tablePart.replace(specificColumnsPart ?? "", "");
                     }
