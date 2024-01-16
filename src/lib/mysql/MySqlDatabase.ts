@@ -3,6 +3,7 @@ import { CompletionItem, CompletionItemKind } from "vscode";
 
 export class MySqlDatabase {
     private connection: Connection;
+    private savedFieldData: Record<string, Record<string, { type: string }>> = {};
     constructor(config: ConnectionOptions) {
         this.connection = createConnection(config);
     }
@@ -37,15 +38,32 @@ export class MySqlDatabase {
     public getFieldNames = async (tableName: string) => {
         try {
             const results = await this.queryPromise(`SHOW COLUMNS FROM ${tableName};`);
-            const fieldNames = results.map((row) => row["Field"]);
-            return fieldNames.map((fieldName) => {
+            const fieldsData = results.map((row) => [row["Field"] as string, row["Type"] as string]);
+            return fieldsData.map((fieldData) => {
+                const [fieldName, fieldType] = fieldData;
                 const item = new CompletionItem(fieldName, CompletionItemKind.Field);
+                if (!this.savedFieldData[tableName]) {
+                    this.savedFieldData[tableName] = {};
+                }
+                if (!this.savedFieldData[tableName][fieldName]) {
+                    this.savedFieldData[tableName][fieldName] = { type: "" };
+                }
+                this.savedFieldData[tableName][fieldName].type = fieldType;
                 item.insertText = fieldName;
                 item.detail = "Field name";
                 return item;
             });
         } catch (error) {
             return [];
+        }
+    };
+
+    public getFieldType = (tableName: string, fieldName: string) => {
+        try {
+            return this.savedFieldData[tableName][fieldName].type;
+        } catch (error) {
+            this.getFieldNames(tableName);
+            return "";
         }
     };
 

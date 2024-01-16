@@ -3,6 +3,7 @@ import { MySQLCompletionProvider } from "./lib/mysql/MySQLCompletionProvider";
 import { getDbCredentials } from "./lib/helpers";
 import { MySQLLinter } from "./lib/mysql/MySQLLinter";
 import { MySqlDatabase } from "./lib/mysql/MySqlDatabase";
+import { HoverProvider } from "./lib/mysql/HoverProvider";
 
 export function activate(context: vscode.ExtensionContext) {
     // Create an output channel
@@ -26,6 +27,9 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Register Linter
     const linter = new MySQLLinter(outputChannel);
+
+    // Register hover provider
+    const hoverProvider = new HoverProvider(outputChannel);
 
     // Register Command for Linting
     const disposableLinting = vscode.commands.registerCommand("SQL-PHP.Intellisense.lint", () => {
@@ -75,6 +79,7 @@ export function activate(context: vscode.ExtensionContext) {
                 vscode.window.showInformationMessage("Successfully connected to database");
                 linter.setDb(database);
                 completionProvider.setDb(database);
+                hoverProvider.setDb(database);
             } else {
                 vscode.window.showInformationMessage("Could not connect to database");
                 await context.secrets.delete("SQL-PHP.Intellisense.user");
@@ -82,6 +87,9 @@ export function activate(context: vscode.ExtensionContext) {
             }
         })
     );
+
+    // Register hover provider for PHP
+    context.subscriptions.push(vscode.languages.registerHoverProvider("php", hoverProvider));
 }
 
 // This method is called when your extension is deactivated
