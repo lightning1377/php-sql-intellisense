@@ -43,12 +43,15 @@ export class HoverProvider implements vscode.HoverProvider {
         const documentText = document.getText();
         const queries = extractSQLQueries(documentText);
 
+        // Get the index in the whole document
+        const indexInDocument = document.offsetAt(position);
+
         let targetQuery: string = "";
         for (const query of queries) {
             const queryStartIndex = documentText.indexOf(query);
             const queryEndIndex = queryStartIndex + query.length;
 
-            if (position.character < queryEndIndex && position.character > queryStartIndex) {
+            if (indexInDocument < queryEndIndex && indexInDocument > queryStartIndex) {
                 targetQuery = query;
                 break;
             }
