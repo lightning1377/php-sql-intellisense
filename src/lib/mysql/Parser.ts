@@ -98,7 +98,7 @@ export function parser(queryString: string, pointerIndex: number): ParsedQuery {
         }
 
         function parseContext(query: string, valuesIndex: number, selectIndex: number) {
-            const tablePart = query.substring(QueryKeyword.INSERT_INTO.length, valuesIndex).trim();
+            const tablePart = query.substring(QueryKeyword.INSERT_INTO.length, valuesIndex > -1 ? valuesIndex : undefined).trim();
             const regex = /\(([^)]+)\)/;
             const match = tablePart.match(regex);
             const specificColumnsPart = match ? `(${match[1]})` : null;
