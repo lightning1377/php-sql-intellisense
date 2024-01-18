@@ -4,6 +4,7 @@ import { getDbCredentials } from "./lib/helpers";
 import { MySQLLinter } from "./lib/mysql/MySQLLinter";
 import { MySqlDatabase } from "./lib/mysql/MySqlDatabase";
 import { HoverProvider } from "./lib/mysql/HoverProvider";
+import { CodeActionProvider } from "./lib/mysql/CodeActionProvider";
 
 export function activate(context: vscode.ExtensionContext) {
     // Create an output channel
@@ -30,6 +31,9 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Register hover provider
     const hoverProvider = new HoverProvider(outputChannel);
+
+    // Register code action provider
+    const codeActionProvider = new CodeActionProvider(outputChannel);
 
     // Register Command for Linting
     const disposableLinting = vscode.commands.registerCommand("SQL-PHP.Intellisense.lint", () => {
@@ -80,6 +84,7 @@ export function activate(context: vscode.ExtensionContext) {
                 linter.setDb(database);
                 completionProvider.setDb(database);
                 hoverProvider.setDb(database);
+                codeActionProvider.setDb(database);
             } else {
                 vscode.window.showInformationMessage("Could not connect to database");
                 await context.secrets.delete("SQL-PHP.Intellisense.user");
@@ -90,6 +95,14 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Register hover provider for PHP
     context.subscriptions.push(vscode.languages.registerHoverProvider("php", hoverProvider));
+    // register action provider for running sql queries
+    context.subscriptions.push(vscode.languages.registerCodeActionsProvider("php", codeActionProvider));
+    // Register the command handler for running the selected SQL query;
+    context.subscriptions.push(
+        vscode.commands.registerCommand("extension.runSelectedSQLQuery", async (sqlQuery: string) => {
+            await codeActionProvider.runSqlQuery(sqlQuery);
+        })
+    );
 }
 
 // This method is called when your extension is deactivated

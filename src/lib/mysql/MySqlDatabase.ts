@@ -67,6 +67,11 @@ export class MySqlDatabase {
         }
     };
 
+    public runQuery = async (query: string) => {
+        const res = await this.queryPromise(query);
+        return res;
+    };
+
     public getIsConnected = async () => {
         return await new Promise<QueryError | true>((resolve) => {
             this.connection.ping((err) => (err ? resolve(err) : resolve(true)));
