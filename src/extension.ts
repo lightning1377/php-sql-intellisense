@@ -99,8 +99,8 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.languages.registerCodeActionsProvider("php", codeActionProvider));
     // Register the command handler for running the selected SQL query;
     context.subscriptions.push(
-        vscode.commands.registerCommand("extension.runSelectedSQLQuery", async (sqlQuery: string) => {
-            await codeActionProvider.runSqlQuery(sqlQuery);
+        vscode.commands.registerCommand("extension.runSelectedSQLQuery", async (sqlQuery: string, documentText: string) => {
+            await codeActionProvider.runSqlQuery(sqlQuery, documentText);
         })
     );
 }

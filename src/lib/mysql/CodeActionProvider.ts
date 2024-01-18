@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import type { MySqlDatabase } from "./MySqlDatabase";
+import { VariableDetector } from "./VariableDetector";
 
 export class CodeActionProvider implements vscode.CodeActionProvider {
     private database: MySqlDatabase | null = null;
@@ -13,24 +14,29 @@ export class CodeActionProvider implements vscode.CodeActionProvider {
         this.database = database;
     }
 
-    async runSqlQuery(sqlQuery: string) {
-        try {
-            const results = await this.database?.runQuery(sqlQuery);
+    async runSqlQuery(sqlQuery: string, documentText: string) {
+        // Replace variables in the SQL query
+        const replacedQuery = await VariableDetector.detectAndReplaceVariables(sqlQuery, documentText);
+        this.outputChannel.appendLine(`Running query: ${replacedQuery}`);
+        // this.outputChannel.appendLine(replacedQuery);
+        const results = await this.database?.runQuery(replacedQuery).catch((err) => {
+            this.outputChannel.appendLine(`Error occurred: ${err}`);
+        });
+        if (results) {
             this.displayResultsInWebView(results);
-        } catch (error: any) {
-            this.outputChannel.appendLine(`Error executing SQL Query: ${error.message}`);
         }
     }
 
     provideCodeActions(document: vscode.TextDocument, range: vscode.Range): vscode.CodeAction[] {
         const selectedText = document.getText(range);
+        const documentText = document.getText();
 
         if (selectedText && this.database) {
             const runQueryAction = new vscode.CodeAction("Run Selected SQL Query", vscode.CodeActionKind.QuickFix);
             runQueryAction.command = {
                 command: "extension.runSelectedSQLQuery",
                 title: "Run Selected SQL Query",
-                arguments: [selectedText]
+                arguments: [selectedText, documentText]
             };
 
             return [runQueryAction];
