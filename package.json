@@ -4,7 +4,7 @@
   "icon": "images/php_mysql.png",
   "publisher": "Siavash",
   "description": "Provides intellisense for writing mysql queries in php",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "author": {
     "name": "Siavash Kahe",
     "email": "s.kahe98@gmail.com"
