@@ -30,6 +30,11 @@
         "command": "SQL-PHP.Intellisense.connect",
         "category": "SQL-PHP",
         "title": "Connect to database"
+      },
+      {
+        "command": "SQL-PHP.Intellisense.clear",
+        "category": "SQL-PHP",
+        "title": "Delete database credentials"
       }
     ],
     "configuration": [

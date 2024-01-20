@@ -1,10 +1,11 @@
 import * as vscode from "vscode";
 import { MySQLCompletionProvider } from "./lib/mysql/MySQLCompletionProvider";
-import { getDbCredentials } from "./lib/helpers";
+import { getDbCredentials, removeDbCredentials } from "./lib/helpers";
 import { MySQLLinter } from "./lib/mysql/MySQLLinter";
 import { MySqlDatabase } from "./lib/mysql/MySqlDatabase";
 import { HoverProvider } from "./lib/mysql/HoverProvider";
 import { CodeActionProvider } from "./lib/mysql/CodeActionProvider";
+import type { QueryError } from "mysql2";
 
 export function activate(context: vscode.ExtensionContext) {
     // Create an output channel
@@ -90,6 +91,18 @@ export function activate(context: vscode.ExtensionContext) {
                 await context.secrets.delete("SQL-PHP.Intellisense.user");
                 await context.secrets.delete("SQL-PHP.Intellisense.password");
             }
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand("SQL-PHP.Intellisense.clear", async () => {
+            await removeDbCredentials(context)
+                .then(() => {
+                    vscode.window.showInformationMessage("Successfully removed database credentials");
+                })
+                .catch(() => {
+                    vscode.window.showInformationMessage("Couldn't remove database credentials");
+                });
         })
     );
 

@@ -33,6 +33,11 @@ export async function getDbCredentials(context: vscode.ExtensionContext) {
     }
 }
 
+export async function removeDbCredentials(context: vscode.ExtensionContext) {
+    await context.secrets.delete("SQL-PHP.Intellisense.user");
+    await context.secrets.delete("SQL-PHP.Intellisense.password");
+}
+
 export function extractSQLQueries(text: string): string[] {
     const sqlQueryRegex = /Database::(prepare|getResults|getValue|getRow|PrepareExecuteTC)\(\s*"([^"]+)"/g;
     const matches: string[] = [];
