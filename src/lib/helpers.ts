@@ -1,14 +1,4 @@
-import { parser } from "./mysql/Parser";
 import * as vscode from "vscode";
-
-export function processLine(line: string, pointerIndex: number) {
-    const query = extractSQLQueries(line)[0];
-    if (query) {
-        const index = line.indexOf(query);
-        return parser(query, pointerIndex - (index + 1));
-    }
-    return false;
-}
 
 export async function getDbCredentials(context: vscode.ExtensionContext) {
     const user = await context.secrets.get("SQL-PHP.Intellisense.user");
@@ -38,13 +28,25 @@ export async function removeDbCredentials(context: vscode.ExtensionContext) {
     await context.secrets.delete("SQL-PHP.Intellisense.password");
 }
 
-export function extractSQLQueries(text: string): string[] {
+export function extractSQLQueries(text: string): { query: string; startIndex: number }[] {
     const sqlQueryRegex = /Database::(prepare|getResults|getValue|getRow|PrepareExecuteTC)\(\s*"([^"]+)"/g;
-    const matches: string[] = [];
+    const matches: { query: string; startIndex: number }[] = [];
     let match;
 
     while ((match = sqlQueryRegex.exec(text)) !== null) {
-        matches.push(match[2]);
+        matches.push({ query: match[2], startIndex: match.index + "Database::".length + match[1].length + 2 });
+    }
+
+    return matches;
+}
+
+export function findVariableAssignments(text: string, variable: string) {
+    const regex = new RegExp(`\\${variable}\\s=[^=]([^\\\\s]+);`, "gm");
+    const matches = [];
+    let match;
+
+    while ((match = regex.exec(text)) !== null) {
+        matches.push(match[1]);
     }
 
     return matches;

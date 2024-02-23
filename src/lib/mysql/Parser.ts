@@ -11,7 +11,7 @@ enum QueryKeyword {
     SET = "SET"
 }
 
-const JOIN_KEYWORDS = ["JOIN", "LEFT JOIN", "RIGHT JOIN"];
+const JOIN_KEYWORDS = ["LEFT JOIN", "RIGHT JOIN", "INNER JOIN", "JOIN"];
 
 interface Field {
     sourceTable: string;

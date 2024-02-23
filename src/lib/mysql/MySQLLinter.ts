@@ -1,6 +1,6 @@
 import { Parser } from "node-sql-parser";
 import { MySqlDatabase } from "./MySqlDatabase";
-import { extractSQLQueries } from "../helpers";
+import { extractSQLQueries, findVariableAssignments } from "../helpers";
 import { Diagnostic, DiagnosticCollection, DiagnosticSeverity, OutputChannel, Range, TextDocument, languages } from "vscode";
 
 export class MySQLLinter {
@@ -49,9 +49,9 @@ export class MySQLLinter {
         }
 
         const documentText = document.getText();
-        const queries = extractSQLQueries(documentText);
+        const queriesData = extractSQLQueries(documentText);
 
-        if (!queries.length) {
+        if (!queriesData.length) {
             this.outputChannel.appendLine("Could not find any valid queries in document");
             return;
         }
@@ -61,7 +61,7 @@ export class MySQLLinter {
 
         const diagnostics: Diagnostic[] = [];
 
-        for (const query of queries) {
+        for (const { query } of queriesData) {
             const queryStartIndex = documentText.indexOf(query);
             const queryEndIndex = queryStartIndex + query.length;
 
@@ -88,10 +88,22 @@ export class MySQLLinter {
 
             // check query field names
             for (const { tableName, fieldName } of fields) {
-                if (fieldName !== "(.*)" && tableName in dbFields && !dbFields[tableName].includes(fieldName)) {
-                    const fieldNameStartIndex = documentText.indexOf(fieldName, queryStartIndex);
-                    const fieldNameEndIndex = fieldNameStartIndex + fieldName.length;
-                    diagnostics.push(new Diagnostic(new Range(document.positionAt(fieldNameStartIndex), document.positionAt(fieldNameEndIndex)), `Field name '${fieldName}' not found in table '${tableName}'`, DiagnosticSeverity.Error));
+                if (fieldName !== "(.*)" && tableName in dbFields) {
+                    if (fieldName.startsWith("$")) {
+                        const assignments = findVariableAssignments(documentText, fieldName);
+                        for (const assigned of assignments) {
+                            const cleaned = assigned.replace(/['"‘“’”]/g, "");
+                            if (!dbFields[tableName].includes(cleaned)) {
+                                const fieldNameStartIndex = documentText.indexOf(fieldName, queryStartIndex);
+                                const fieldNameEndIndex = fieldNameStartIndex + fieldName.length;
+                                diagnostics.push(new Diagnostic(new Range(document.positionAt(fieldNameStartIndex), document.positionAt(fieldNameEndIndex)), `Field name '${cleaned}' not found in table '${tableName}'`, DiagnosticSeverity.Error));
+                            }
+                        }
+                    } else if (!dbFields[tableName].includes(fieldName)) {
+                        const fieldNameStartIndex = documentText.indexOf(fieldName, queryStartIndex);
+                        const fieldNameEndIndex = fieldNameStartIndex + fieldName.length;
+                        diagnostics.push(new Diagnostic(new Range(document.positionAt(fieldNameStartIndex), document.positionAt(fieldNameEndIndex)), `Field name '${fieldName}' not found in table '${tableName}'`, DiagnosticSeverity.Error));
+                    }
                 }
             }
 
