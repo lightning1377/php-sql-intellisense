@@ -49,6 +49,12 @@ This extension follows the best practices and guidelines provided by Visual Stud
 
 Contributions to this extension are welcome! If you'd like to contribute, please check out the GitHub repository and submit a pull request.
 
+### Feature RoadMap
+
+-   Add support for more libraries (it only supports pdo at the moment) and sql languages
+-   Add command for linting every php file in a project, to find invalid table/field names
+-   ...
+
 ## For More Information
 
 You can find more information about Visual Studio Code's Markdown support and syntax reference using the following links:
