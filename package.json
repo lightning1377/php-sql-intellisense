@@ -5,6 +5,9 @@
   "publisher": "Siavash",
   "description": "Provides intellisense for writing mysql queries in php",
   "version": "0.2.0",
+  "repository": {
+    "url": "https://github.com/lightning1377/php-sql-intellisense.git"
+  },
   "author": {
     "name": "Siavash Kahe",
     "email": "s.kahe98@gmail.com"

@@ -22,13 +22,6 @@ This extension does not contribute any custom settings.
 
 There are no known issues at the moment.
 
-## Release Notes
-
-### 1.0.0
-
--   Initial release of the "php-sql-intellisense" extension.
--   Added support for SQL IntelliSense in PHP files.
-
 ## How to Improve
 
 This is the first version of the extension, and your feedback is valuable for improving it. If you have any suggestions, feature requests, or encounter any issues, please feel free to open an issue on the GitHub repository.
