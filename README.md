@@ -20,7 +20,22 @@ This extension does not contribute any custom settings.
 
 ## Known Issues
 
-There are no known issues at the moment.
+-   Given db username and password are removed on connection error, although the error might not be with authentication
+
+## Usage Guide
+
+1. Open Extension settings and provide address of database server and the name of database in either User or Workspace settings.
+
+-   Enter the address without the port, port is considered 3306 as default.
+
+2. Open command palette and select the action Connect to database.
+
+-   All of this extension’s commands can be found by searching SQL-PHP in the command palette.
+
+3. Enter the username and password for your remote connection to database.
+
+You should see a message window indicating that the connection was successful in the bottom-side corner after a few moments.
+Username and password are stored in secrets and can only be cleared by the Delete database credentials command.
 
 ## How to Improve
 

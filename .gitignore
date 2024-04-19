@@ -5,3 +5,4 @@ node_modules
 *.vsix
 **/*.pdf
 **/*.docx
+package-lock.json
