@@ -1,3 +1,4 @@
-export const tableNameKeywords = ["FROM", "JOIN", "INTO", "UPDATE"];
-export const fieldNameKeywords = ["SELECT", "SET", "ON", "BY", "WHERE"];
-export const allKeyWords = [...tableNameKeywords, ...fieldNameKeywords];
+export const TABLE_NAME_KEYWORDS = ["FROM", "JOIN", "INTO", "UPDATE"];
+export const FIELD_NAME_KEYWORDS = ["SELECT", "SET", "ON", "BY", "WHERE"];
+export const ALL_KEYWORDS = [...TABLE_NAME_KEYWORDS, ...FIELD_NAME_KEYWORDS];
+export const JOIN_KEYWORDS = ["LEFT JOIN", "RIGHT JOIN", "INNER JOIN", "JOIN"];

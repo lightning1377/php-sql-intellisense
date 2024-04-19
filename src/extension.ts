@@ -5,7 +5,6 @@ import { MySQLLinter } from "./lib/mysql/MySQLLinter";
 import { MySqlDatabase } from "./lib/mysql/MySqlDatabase";
 import { HoverProvider } from "./lib/mysql/HoverProvider";
 import { CodeActionProvider } from "./lib/mysql/CodeActionProvider";
-import type { QueryError } from "mysql2";
 
 export function activate(context: vscode.ExtensionContext) {
     // Create an output channel
@@ -16,38 +15,35 @@ export function activate(context: vscode.ExtensionContext) {
     // Dispose of the output channel when it's no longer needed
     context.subscriptions.push(outputChannel);
 
-    // Create db helper
+    // Database object for managing connections
     let database: MySqlDatabase | null = null;
 
     // Register Completion Provider
     const completionProvider = new MySQLCompletionProvider(outputChannel);
+    // Trigger characters for auto-completion
     const triggerCharacters = ['"', "`"];
-
     const disposableCompletion = vscode.languages.registerCompletionItemProvider({ language: "php" }, completionProvider, ...triggerCharacters);
-
     context.subscriptions.push(disposableCompletion);
 
-    // Register Linter
+    // Register Linter for SQL queries
     const linter = new MySQLLinter(outputChannel);
 
-    // Register hover provider
+    // Register Hover Provider for SQL entities
     const hoverProvider = new HoverProvider(outputChannel);
 
-    // Register code action provider
+    // Register Code Action Provider for SQL actions
     const codeActionProvider = new CodeActionProvider(outputChannel);
 
     // Register Command for Linting
     const disposableLinting = vscode.commands.registerCommand("SQL-PHP.Intellisense.lint", () => {
-        // Get the active text editor
         const document = vscode.window.activeTextEditor?.document;
-
-        // Check if there is an active text editor and it has a document
         if (document) {
             linter.parseDocument(document);
         } else {
             vscode.window.showWarningMessage("No active document found.");
         }
     });
+    context.subscriptions.push(disposableLinting);
 
     // Register event handler for document save
     vscode.workspace.onDidSaveTextDocument((document) => {
@@ -56,14 +52,12 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
-    context.subscriptions.push(disposableLinting);
-
+    // Command for connecting to the database
     context.subscriptions.push(
         vscode.commands.registerCommand("SQL-PHP.Intellisense.connect", async () => {
             if (database) {
                 database.destroy();
             }
-            // get extension db config
             const dbConfig = vscode.workspace.getConfiguration("SQL-PHP.Intellisense").get("database") as { host: string; name: string };
             const connectionOptions = {
                 host: dbConfig.host,
@@ -71,17 +65,16 @@ export function activate(context: vscode.ExtensionContext) {
                 user: "",
                 password: ""
             };
-            // get credentials for connecting to db
             const credentials = await getDbCredentials(context);
             if (credentials) {
                 connectionOptions.user = credentials.user;
                 connectionOptions.password = credentials.password;
             }
             database = new MySqlDatabase(connectionOptions);
-
             const status = await database.getIsConnected();
             if (status) {
                 vscode.window.showInformationMessage("Successfully connected to database");
+                // Update providers with the new database connection
                 linter.setDb(database);
                 completionProvider.setDb(database);
                 hoverProvider.setDb(database);
@@ -94,6 +87,7 @@ export function activate(context: vscode.ExtensionContext) {
         })
     );
 
+    // Command for clearing stored database credentials
     context.subscriptions.push(
         vscode.commands.registerCommand("SQL-PHP.Intellisense.clear", async () => {
             await removeDbCredentials(context)
@@ -108,9 +102,11 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Register hover provider for PHP
     context.subscriptions.push(vscode.languages.registerHoverProvider("php", hoverProvider));
-    // register action provider for running sql queries
+
+    // Register action provider for running SQL queries
     context.subscriptions.push(vscode.languages.registerCodeActionsProvider("php", codeActionProvider));
-    // Register the command handler for running the selected SQL query;
+
+    // Register the command handler for running the selected SQL query
     context.subscriptions.push(
         vscode.commands.registerCommand("extension.runSelectedSQLQuery", async (sqlQuery: string, documentText: string) => {
             await codeActionProvider.runSqlQuery(sqlQuery, documentText);

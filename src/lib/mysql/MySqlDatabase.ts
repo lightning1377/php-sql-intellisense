@@ -1,12 +1,16 @@
-import { Connection, ConnectionOptions, QueryError, RowDataPacket, createConnection } from "mysql2";
+import { Connection, ConnectionOptions, RowDataPacket, createConnection } from "mysql2";
 import { CompletionItem, CompletionItemKind } from "vscode";
 
 export class MySqlDatabase {
     private connection: Connection;
     private savedFieldData: Record<string, Record<string, { type: string }>> = {};
+
+    // Constructor initializes the database connection
     constructor(config: ConnectionOptions) {
         this.connection = createConnection(config);
     }
+
+    // Method to execute a SQL query and return a promise
     private queryPromise = (sql: string) => {
         return new Promise<RowDataPacket[]>((resolve, reject) => {
             this.connection.query(sql, (error, results) => {
@@ -19,9 +23,9 @@ export class MySqlDatabase {
         });
     };
 
+    // Method to retrieve table names from the database
     public getTableNames = async () => {
         try {
-            // Fetch table names from the database
             const results = await this.queryPromise("SHOW TABLES");
             const tableNames = results.map((row) => row[`Tables_in_${this.connection.config.database?.toLowerCase()}`]);
             return tableNames.map((tableName: string) => {
@@ -35,6 +39,7 @@ export class MySqlDatabase {
         }
     };
 
+    // Method to retrieve field names for a given table
     public getFieldNames = async (tableName: string) => {
         try {
             const results = await this.queryPromise(`SHOW COLUMNS FROM ${tableName};`);
@@ -58,20 +63,24 @@ export class MySqlDatabase {
         }
     };
 
+    // Method to retrieve the type of a field for a given table and field name
     public getFieldType = (tableName: string, fieldName: string) => {
         try {
             return this.savedFieldData[tableName][fieldName].type;
         } catch (error) {
+            // If field type is not found, attempt to retrieve it again
             this.getFieldNames(tableName);
             return "";
         }
     };
 
+    // Method to execute a SQL query
     public runQuery = async (query: string) => {
         const res = await this.queryPromise(query);
         return res;
     };
 
+    // Method to check if the database connection is active
     public getIsConnected = async () => {
         return await new Promise<boolean>((resolve) => {
             this.connection.ping((err) => (err ? resolve(false) : resolve(true)));
@@ -91,6 +100,8 @@ export class MySqlDatabase {
                     }
                 });
             }
-        } catch (error) {}
+        } catch (error) {
+            // Handle any errors during disconnection
+        }
     };
 }

@@ -10,23 +10,30 @@ export class CodeActionProvider implements vscode.CodeActionProvider {
     constructor(outputChannel: vscode.OutputChannel) {
         this.outputChannel = outputChannel;
     }
+
+    // Set the database instance
     public setDb(database: MySqlDatabase) {
         this.database = database;
     }
 
+    // Run the SQL query and display results in a webview
     async runSqlQuery(sqlQuery: string, documentText: string) {
         // Replace variables in the SQL query
         const replacedQuery = await VariableDetector.detectAndReplaceVariables(sqlQuery, documentText);
         this.outputChannel.appendLine(`Running query: ${replacedQuery}`);
-        // this.outputChannel.appendLine(replacedQuery);
+
+        // Run the replaced query against the database
         const results = await this.database?.runQuery(replacedQuery).catch((err) => {
             this.outputChannel.appendLine(`Error occurred: ${err}`);
         });
+
+        // Display results in a webview
         if (results) {
             this.displayResultsInWebView(results);
         }
     }
 
+    // Provide code actions for running selected SQL queries
     provideCodeActions(document: vscode.TextDocument, range: vscode.Range): vscode.CodeAction[] {
         const selectedText = document.getText(range);
         const documentText = document.getText();
@@ -45,6 +52,7 @@ export class CodeActionProvider implements vscode.CodeActionProvider {
         return [];
     }
 
+    // Display query results in a webview
     private displayResultsInWebView(results?: any[]) {
         if (results && results.length > 0) {
             const htmlContent = this.generateTableHtml(results);
@@ -54,6 +62,7 @@ export class CodeActionProvider implements vscode.CodeActionProvider {
         }
     }
 
+    // Generate HTML table from query results
     private generateTableHtml(results: any[]): string {
         if (!results || results.length === 0) {
             return "";
@@ -62,13 +71,13 @@ export class CodeActionProvider implements vscode.CodeActionProvider {
         // Extract field names from the first result row
         const fieldNames = Object.keys(results[0]);
 
-        // Get the current theme's border color
+        // Determine border color based on active color theme
         const borderColor = vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Light ? "#000000" : "#ffffff";
 
-        // Apply the border to the table
+        // Define CSS style for table fields
         const fieldsStyle = `style="border: 1px solid ${borderColor}; padding: 5px 10px;"`;
 
-        // Generate the HTML table with title fields as headers
+        // Generate HTML table with field names as headers
         const tableHeader = `<tr>${fieldNames.map((fieldName) => `<th ${fieldsStyle}>${fieldName}</th>`).join("")}</tr>`;
         const tableRows = results.map((row) => `<tr ${fieldsStyle}>${fieldNames.map((fieldName) => `<td ${fieldsStyle}>${row[fieldName]}</td>`).join("")}</tr>`).join("");
 
@@ -77,6 +86,7 @@ export class CodeActionProvider implements vscode.CodeActionProvider {
         return `<table ${tableStyle}>${tableHeader}${tableRows}</table>`;
     }
 
+    // Show the webview panel with query results
     private showWebView(htmlContent: string) {
         if (this.webViewPanel) {
             this.webViewPanel.webview.html = htmlContent;
@@ -85,6 +95,7 @@ export class CodeActionProvider implements vscode.CodeActionProvider {
             this.webViewPanel = vscode.window.createWebviewPanel("sqlQueryResults", "SQL Query Results", vscode.ViewColumn.Beside, {
                 enableScripts: true
             });
+
             this.webViewPanel.webview.html = htmlContent;
 
             // Dispose the webview panel when the user closes it
@@ -94,8 +105,8 @@ export class CodeActionProvider implements vscode.CodeActionProvider {
         }
     }
 
+    // Dispose of resources when the extension is deactivated
     dispose() {
-        // Dispose of the webview panel when the extension is deactivated
         if (this.webViewPanel) {
             this.webViewPanel.dispose();
         }

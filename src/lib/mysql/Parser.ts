@@ -1,5 +1,6 @@
-import { allKeyWords, fieldNameKeywords } from "../constants";
+import { ALL_KEYWORDS, FIELD_NAME_KEYWORDS, JOIN_KEYWORDS } from "../constants";
 
+// Define types and interfaces
 type QueryContext = "table" | "field" | false;
 
 enum QueryKeyword {
@@ -10,8 +11,6 @@ enum QueryKeyword {
     VALUES = "VALUES",
     SET = "SET"
 }
-
-const JOIN_KEYWORDS = ["LEFT JOIN", "RIGHT JOIN", "INNER JOIN", "JOIN"];
 
 interface Field {
     sourceTable: string;
@@ -31,16 +30,20 @@ interface ParsedQuery {
     fromTable: string;
 }
 
+// Main parser function
 export function parser(queryString: string, pointerIndex: number): ParsedQuery {
+    // If the pointer is at the backtick, the backtick is not included as part of the query; otherwise, retain the original query string
     const query = queryString[pointerIndex] === "`" ? queryString.substring(0, pointerIndex) + queryString.substring(pointerIndex) : queryString;
     const fields: Field[] = [];
     const tables: Table[] = [];
     let context: QueryContext = false;
     let fromTable: string = "";
 
+    // Retrieve the character before the pointer index
     const indexOfCharacterBeforePointer = pointerIndex - 1;
     const characterBeforePointer = queryString[indexOfCharacterBeforePointer];
 
+    // Check the type of SQL query and parse accordingly
     if (query.startsWith(QueryKeyword.SELECT)) {
         parseSelectQuery(query, pointerIndex);
     } else if (query.startsWith(QueryKeyword.INSERT_INTO)) {
@@ -49,8 +52,10 @@ export function parser(queryString: string, pointerIndex: number): ParsedQuery {
         parseUpdateQuery(query, pointerIndex);
     }
 
+    // Return the parsed query object
     return { fields, tables, context, fromTable };
 
+    // Function to parse SELECT queries
     function parseSelectQuery(query: string, _pointerIndex: number) {
         const fromIndex = query.indexOf(QueryKeyword.FROM);
         if (fromIndex !== -1) {
@@ -63,9 +68,10 @@ export function parser(queryString: string, pointerIndex: number): ParsedQuery {
             parseContext(query, fromIndex);
         }
 
+        // Function to determine the context (table or field) based on the pointer index
         function parseContext(query: string, fromIndex: number) {
             const firstKeyword = getFirstKeywordBeforePointer(query, _pointerIndex);
-            const isFieldContext = fieldNameKeywords.includes(firstKeyword);
+            const isFieldContext = FIELD_NAME_KEYWORDS.includes(firstKeyword);
 
             if (!isFieldContext && fromIndex + QueryKeyword.FROM.length < _pointerIndex) {
                 if ([",", " "].includes(characterBeforePointer)) {
@@ -90,6 +96,7 @@ export function parser(queryString: string, pointerIndex: number): ParsedQuery {
         }
     }
 
+    // Function to parse INSERT queries
     function parseInsertQuery(query: string, _pointerIndex: number) {
         if (_pointerIndex > QueryKeyword.INSERT_INTO.length) {
             const valuesIndex = query.indexOf(QueryKeyword.VALUES);
@@ -122,6 +129,7 @@ export function parser(queryString: string, pointerIndex: number): ParsedQuery {
         }
     }
 
+    // Function to parse UPDATE queries
     function parseUpdateQuery(query: string, _pointerIndex: number) {
         if (_pointerIndex > QueryKeyword.UPDATE.length) {
             const setIndex = query.indexOf(QueryKeyword.SET);
@@ -142,6 +150,7 @@ export function parser(queryString: string, pointerIndex: number): ParsedQuery {
         }
     }
 
+    // Function to parse SELECT item
     function parseSelectItem(item: string) {
         const parts = item.split(".");
         const name = parts.pop() || "";
@@ -150,6 +159,7 @@ export function parser(queryString: string, pointerIndex: number): ParsedQuery {
         fields.push({ sourceTable, name, alias });
     }
 
+    // Function to parse JOIN clauses
     function parseJoinClauses(tablePart: string) {
         let index = 0;
         do {
@@ -164,16 +174,18 @@ export function parser(queryString: string, pointerIndex: number): ParsedQuery {
             tables.push({ name, alias });
         } while (index < tablePart.length);
 
+        // Function to get the first JOIN clause
         function getFirstJoinClause(input: string): string | undefined {
             return JOIN_KEYWORDS.find((keyword) => input.includes(keyword));
         }
     }
 
+    // Function to get the first keyword before the pointer index
     function getFirstKeywordBeforePointer(input: string, index: number): string {
         let word = "";
         let nextIndex = index;
 
-        while (nextIndex > 0 && !allKeyWords.includes(word)) {
+        while (nextIndex > 0 && !ALL_KEYWORDS.includes(word)) {
             word = getWordBeforePointer(input, nextIndex, false);
             nextIndex -= word.length;
             word = word.trim();
@@ -181,6 +193,7 @@ export function parser(queryString: string, pointerIndex: number): ParsedQuery {
 
         return word.trim();
 
+        // Function to get the word before the pointer index
         function getWordBeforePointer(input: string, pointerIndex: number, trim = true) {
             if (pointerIndex < 0 || pointerIndex >= input.length) {
                 return "";
