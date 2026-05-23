@@ -57,13 +57,14 @@ export function activate(context: vscode.ExtensionContext) {
             if (database) {
                 database.destroy();
             }
-            const dbConfig = vscode.workspace.getConfiguration("SQL-PHP.Intellisense").get("database") as { host: string; name: string };
+            const dbConfig = vscode.workspace.getConfiguration("SQL-PHP.Intellisense").get("database") as { host: string; port: number; name: string };
             if (!dbConfig.host || !dbConfig.name) {
                 vscode.window.showWarningMessage("Configure the MySQL host and database name before connecting.");
                 return;
             }
             const connectionOptions = {
                 host: dbConfig.host,
+                port: dbConfig.port,
                 database: dbConfig.name,
                 user: "",
                 password: ""

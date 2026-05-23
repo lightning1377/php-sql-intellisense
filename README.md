@@ -4,7 +4,7 @@ SQL-PHP IntelliSense helps PHP projects write MySQL queries with schema-aware co
 
 The extension connects to your MySQL database, reads table and column metadata, and uses that schema while you edit SQL strings in PHP files.
 
-![SQL-PHP IntelliSense icon](images/php_mysql.png)
+<img src="images/php_mysql.png" alt="SQL-PHP IntelliSense icon" width="240">
 
 ## Features
 
@@ -31,7 +31,6 @@ Current limitations:
 
 - Queries must be quoted string literals.
 - The extension is optimized for MySQL.
-- The database port is currently the default MySQL port.
 - Advanced SQL syntax, aliases, and dynamically constructed queries may not always be understood.
 
 ## Requirements
@@ -44,6 +43,7 @@ Current limitations:
 1. Install the extension.
 2. Open VS Code settings and configure:
    - `SQL-PHP.Intellisense.database.host`
+   - `SQL-PHP.Intellisense.database.port`
    - `SQL-PHP.Intellisense.database.name`
 3. Run `SQL-PHP: Connect to MySQL Database` from the command palette.
 4. Enter the database username and password when prompted.
@@ -63,6 +63,7 @@ Credentials are stored with VS Code SecretStorage. Run `SQL-PHP: Delete Database
 | Setting | Default | Description |
 | --- | --- | --- |
 | `SQL-PHP.Intellisense.database.host` | `localhost` | MySQL server host name or IP address. |
+| `SQL-PHP.Intellisense.database.port` | `3306` | MySQL server port. |
 | `SQL-PHP.Intellisense.database.name` | empty | Name of the MySQL database to inspect. |
 
 ## Development
@@ -84,7 +85,6 @@ For manual installation from a VSIX file, see the [VSIX installation guide](docs
 
 ## Roadmap
 
-- Configurable database port.
 - Configurable PHP function/method patterns for SQL extraction.
 - Better support for single-quoted and multiline SQL strings.
 - Workspace-wide linting for PHP files.

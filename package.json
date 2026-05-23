@@ -4,7 +4,7 @@
   "icon": "images/php_mysql.png",
   "publisher": "Siavash",
   "description": "MySQL IntelliSense, linting, hovers, and query helpers for PHP database calls.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -63,7 +63,14 @@
           "SQL-PHP.Intellisense.database.host": {
             "type": "string",
             "default": "localhost",
-            "description": "MySQL server host name or IP address. The extension currently uses the default MySQL port."
+            "description": "MySQL server host name or IP address."
+          },
+          "SQL-PHP.Intellisense.database.port": {
+            "type": "number",
+            "default": 3306,
+            "minimum": 1,
+            "maximum": 65535,
+            "description": "MySQL server port."
           },
           "SQL-PHP.Intellisense.database.name": {
             "type": "string",

@@ -4,6 +4,12 @@ All notable changes to the "php-sql-intellisense" extension will be documented i
 
 ## [Unreleased]
 
+## [0.4.0]
+
+- Added configurable MySQL port support through `SQL-PHP.Intellisense.database.port`.
+- Updated connection setup to pass the configured port to MySQL.
+- Updated README setup and settings documentation for the new port option.
+
 ## [0.3.0]
 
 - Rewrote the README with accurate setup, supported PHP patterns, settings, commands, limitations, development steps, and roadmap.
