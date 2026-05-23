@@ -80,6 +80,8 @@ Package the extension locally with:
 npm run vsce
 ```
 
+For manual installation from a VSIX file, see the [VSIX installation guide](docs/SQL-PHP%20Extension%20Guide.pdf).
+
 ## Roadmap
 
 - Configurable database port.
