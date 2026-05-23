@@ -1,65 +1,97 @@
-# php-sql-intellisense README
+# SQL-PHP IntelliSense
 
-Welcome to the README for your "php-sql-intellisense" extension! This extension provides SQL IntelliSense support for writing MySQL queries in PHP using the PDO library.
+SQL-PHP IntelliSense helps PHP projects write MySQL queries with schema-aware completions, lightweight linting, field hovers, and a quick action for running selected SQL.
+
+The extension connects to your MySQL database, reads table and column metadata, and uses that schema while you edit SQL strings in PHP files.
+
+![SQL-PHP IntelliSense icon](images/php_mysql.png)
 
 ## Features
 
-Currently, the extension offers the following features:
+- Table-name completion in supported MySQL query strings.
+- Field-name completion when the source table can be inferred.
+- Diagnostics for table and field names that do not exist in the connected database.
+- Hover information for known fields, including the MySQL column type.
+- Command palette actions for connecting to MySQL, linting the active file, and clearing stored credentials.
+- Code action for running a selected SQL query and viewing results in a VS Code webview.
 
--   SQL IntelliSense support for MySQL queries (A custom parser is used for this as I couldn't get any of the parsers out there to correctly parse an unfinished query)
--   Parsing and validation of SQL queries in PHP documents (To report any invalid field/table names used in queries)
--   Type provider for db fields
+## Supported PHP Patterns
+
+SQL extraction currently targets string literals passed to these static calls:
+
+```php
+Database::prepare("SELECT id, name FROM users");
+Database::getResults("SELECT * FROM users");
+Database::getValue("SELECT email FROM users WHERE id = :id");
+Database::getRow("SELECT * FROM users WHERE id = :id");
+Database::PrepareExecuteTC("SELECT * FROM users");
+```
+
+Current limitations:
+
+- Queries must be quoted string literals.
+- The extension is optimized for MySQL.
+- The database port is currently the default MySQL port.
+- Advanced SQL syntax, aliases, and dynamically constructed queries may not always be understood.
 
 ## Requirements
 
-This extension requires Visual Studio Code.
+- Visual Studio Code `1.84.0` or newer.
+- Access to a MySQL database whose schema should power completions and linting.
+
+## Setup
+
+1. Install the extension.
+2. Open VS Code settings and configure:
+   - `SQL-PHP.Intellisense.database.host`
+   - `SQL-PHP.Intellisense.database.name`
+3. Run `SQL-PHP: Connect to MySQL Database` from the command palette.
+4. Enter the database username and password when prompted.
+
+Credentials are stored with VS Code SecretStorage. Run `SQL-PHP: Delete Database Credentials` to clear them.
+
+## Commands
+
+| Command | Description |
+| --- | --- |
+| `SQL-PHP: Connect to MySQL Database` | Connects to the configured MySQL database and loads schema metadata. |
+| `SQL-PHP: Lint MySQL Queries` | Lints SQL queries in the active PHP document. |
+| `SQL-PHP: Delete Database Credentials` | Removes the stored username and password. |
 
 ## Extension Settings
 
-This extension does not contribute any custom settings.
+| Setting | Default | Description |
+| --- | --- | --- |
+| `SQL-PHP.Intellisense.database.host` | `localhost` | MySQL server host name or IP address. |
+| `SQL-PHP.Intellisense.database.name` | empty | Name of the MySQL database to inspect. |
 
-## Known Issues
+## Development
 
--   Given db username and password are removed on connection error, although the error might not be with authentication
+```sh
+npm install
+npm run compile
+npm run lint
+npm test
+```
 
-## Usage Guide
+Package the extension locally with:
 
-1. Open Extension settings and provide address of database server and the name of database in either User or Workspace settings.
+```sh
+npm run vsce
+```
 
--   Enter the address without the port, port is considered 3306 as default.
+## Roadmap
 
-2. Open command palette and select the action Connect to database.
+- Configurable database port.
+- Configurable PHP function/method patterns for SQL extraction.
+- Better support for single-quoted and multiline SQL strings.
+- Workspace-wide linting for PHP files.
+- Broader SQL parser coverage for joins, aliases, and dynamic query fragments.
 
--   All of this extension’s commands can be found by searching SQL-PHP in the command palette.
+## Contributing
 
-3. Enter the username and password for your remote connection to database.
+Issues and pull requests are welcome on the [GitHub repository](https://github.com/lightning1377/php-sql-intellisense).
 
-You should see a message window indicating that the connection was successful in the bottom-side corner after a few moments.
-Username and password are stored in secrets and can only be cleared by the Delete database credentials command.
+## License
 
-## How to Improve
-
-This is the first version of the extension, and your feedback is valuable for improving it. If you have any suggestions, feature requests, or encounter any issues, please feel free to open an issue on the GitHub repository.
-
-## Following Extension Guidelines
-
-This extension follows the best practices and guidelines provided by Visual Studio Code. For more information, please refer to the [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines).
-
-## Contribution
-
-Contributions to this extension are welcome! If you'd like to contribute, please check out the GitHub repository and submit a pull request.
-
-### Feature RoadMap
-
--   Add support for more libraries (it only supports pdo at the moment) and sql languages
--   Add command for linting every php file in a project, to find invalid table/field names
--   ...
-
-## For More Information
-
-You can find more information about Visual Studio Code's Markdown support and syntax reference using the following links:
-
--   [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
--   [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-Thank you for using "php-sql-intellisense"! Enjoy coding with SQL IntelliSense support in PHP.
+MIT

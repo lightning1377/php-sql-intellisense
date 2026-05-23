@@ -41,15 +41,17 @@ export async function removeDbCredentials(context: vscode.ExtensionContext) {
 
 // Function to extract SQL queries from text
 export function extractSQLQueries(text: string): { query: string; startIndex: number }[] {
-    // Regular expression to match SQL query patterns
-    const sqlQueryRegex = /Database::(prepare|getResults|getValue|getRow|PrepareExecuteTC)\(\s*"([^"]+)"/g;
+    // Regular expression to match supported database call patterns.
+    const sqlQueryRegex = /Database::(prepare|getResults|getValue|getRow|PrepareExecuteTC)\(\s*(["'])((?:\\.|(?!\2)[\s\S])+)\2/g;
     const matches: { query: string; startIndex: number }[] = [];
     let match;
 
     // Iterate over text to find SQL query matches
     while ((match = sqlQueryRegex.exec(text)) !== null) {
+        const query = match[3];
+        const queryStartIndex = match.index + match[0].indexOf(query);
         // Store the matched query and its starting index
-        matches.push({ query: match[2], startIndex: match.index + "Database::".length + match[1].length + 2 });
+        matches.push({ query, startIndex: queryStartIndex });
     }
 
     return matches;
@@ -57,15 +59,15 @@ export function extractSQLQueries(text: string): { query: string; startIndex: nu
 
 // Function to find variable assignments in text
 export function findVariableAssignments(text: string, variable: string) {
-    // Regular expression to match variable assignments
-    const regex = new RegExp(`\\${variable}\\s=[^=]([^\\\\s]+);`, "gm");
-    const matches = [];
+    const escapedVariable = variable.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(`${escapedVariable}\\s*=\\s*([^;]+);`, "gm");
+    const matches: string[] = [];
     let match;
 
     // Iterate over text to find variable assignment matches
     while ((match = regex.exec(text)) !== null) {
         // Store the matched assignments
-        matches.push(match[1]);
+        matches.push(match[1].trim());
     }
 
     return matches;

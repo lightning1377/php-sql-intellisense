@@ -27,13 +27,13 @@ export class MySQLCompletionProvider implements CompletionItemProvider {
         const pointerIndex = document.offsetAt(position);
 
         // Find the SQL query at the cursor position
-        const queryData = extractSQLQueries(document.getText()).find(({ query, startIndex }) => pointerIndex > startIndex && pointerIndex < startIndex + query.length);
+        const queryData = extractSQLQueries(document.getText()).find(({ query, startIndex }) => pointerIndex >= startIndex && pointerIndex <= startIndex + query.length);
         if (!queryData) {
             return [];
         }
         const { query, startIndex } = queryData;
         const cleanedQuery = query.replace(/\s+/g, " ");
-        const queryPointerIndex = pointerIndex - (startIndex + 1);
+        const queryPointerIndex = pointerIndex - startIndex;
         const restOfQuery = query.substring(queryPointerIndex).replace(/\s+/g, " ");
 
         // Adjust the pointer index for the cleaned query

@@ -187,6 +187,9 @@ export function parser(queryString: string, pointerIndex: number): ParsedQuery {
 
         while (nextIndex > 0 && !ALL_KEYWORDS.includes(word)) {
             word = getWordBeforePointer(input, nextIndex, false);
+            if (!word) {
+                break;
+            }
             nextIndex -= word.length;
             word = word.trim();
         }
@@ -195,7 +198,7 @@ export function parser(queryString: string, pointerIndex: number): ParsedQuery {
 
         // Function to get the word before the pointer index
         function getWordBeforePointer(input: string, pointerIndex: number, trim = true) {
-            if (pointerIndex < 0 || pointerIndex >= input.length) {
+            if (pointerIndex < 0 || pointerIndex > input.length) {
                 return "";
             }
 

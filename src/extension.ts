@@ -7,12 +7,8 @@ import { HoverProvider } from "./lib/mysql/HoverProvider";
 import { CodeActionProvider } from "./lib/mysql/CodeActionProvider";
 
 export function activate(context: vscode.ExtensionContext) {
-    // Create an output channel
     const outputChannel = vscode.window.createOutputChannel("SQL-PHP Intellisense");
     outputChannel.appendLine("SQL-PHP Intellisense extension is now active!");
-    // Show the output channel in the UI
-    outputChannel.show();
-    // Dispose of the output channel when it's no longer needed
     context.subscriptions.push(outputChannel);
 
     // Database object for managing connections
@@ -33,6 +29,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Register Code Action Provider for SQL actions
     const codeActionProvider = new CodeActionProvider(outputChannel);
+    context.subscriptions.push(codeActionProvider);
 
     // Register Command for Linting
     const disposableLinting = vscode.commands.registerCommand("SQL-PHP.Intellisense.lint", () => {
@@ -46,11 +43,13 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(disposableLinting);
 
     // Register event handler for document save
-    vscode.workspace.onDidSaveTextDocument((document) => {
-        if (document.languageId === "php") {
-            linter.parseDocument(document);
-        }
-    });
+    context.subscriptions.push(
+        vscode.workspace.onDidSaveTextDocument((document) => {
+            if (document.languageId === "php") {
+                linter.parseDocument(document);
+            }
+        })
+    );
 
     // Command for connecting to the database
     context.subscriptions.push(
@@ -59,6 +58,10 @@ export function activate(context: vscode.ExtensionContext) {
                 database.destroy();
             }
             const dbConfig = vscode.workspace.getConfiguration("SQL-PHP.Intellisense").get("database") as { host: string; name: string };
+            if (!dbConfig.host || !dbConfig.name) {
+                vscode.window.showWarningMessage("Configure the MySQL host and database name before connecting.");
+                return;
+            }
             const connectionOptions = {
                 host: dbConfig.host,
                 database: dbConfig.name,
@@ -69,6 +72,9 @@ export function activate(context: vscode.ExtensionContext) {
             if (credentials) {
                 connectionOptions.user = credentials.user;
                 connectionOptions.password = credentials.password;
+            } else {
+                vscode.window.showWarningMessage("Database connection canceled because credentials were not provided.");
+                return;
             }
             database = new MySqlDatabase(connectionOptions);
             const status = await database.getIsConnected();
@@ -80,9 +86,7 @@ export function activate(context: vscode.ExtensionContext) {
                 hoverProvider.setDb(database);
                 codeActionProvider.setDb(database);
             } else {
-                vscode.window.showInformationMessage("Could not connect to database");
-                await context.secrets.delete("SQL-PHP.Intellisense.user");
-                await context.secrets.delete("SQL-PHP.Intellisense.password");
+                vscode.window.showWarningMessage("Could not connect to database. Check the host, database name, username, and password.");
             }
         })
     );
@@ -108,7 +112,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Register the command handler for running the selected SQL query
     context.subscriptions.push(
-        vscode.commands.registerCommand("extension.runSelectedSQLQuery", async (sqlQuery: string, documentText: string) => {
+        vscode.commands.registerCommand("SQL-PHP.Intellisense.runSelectedSQLQuery", async (sqlQuery: string, documentText: string) => {
             await codeActionProvider.runSqlQuery(sqlQuery, documentText);
         })
     );

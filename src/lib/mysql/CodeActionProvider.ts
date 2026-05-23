@@ -18,6 +18,13 @@ export class CodeActionProvider implements vscode.CodeActionProvider {
 
     // Run the SQL query and display results in a webview
     async runSqlQuery(sqlQuery: string, documentText: string) {
+        if (!this.isReadOnlyQuery(sqlQuery)) {
+            const confirmation = await vscode.window.showWarningMessage("This query may modify data. Run it anyway?", { modal: true }, "Run Query");
+            if (confirmation !== "Run Query") {
+                return;
+            }
+        }
+
         // Replace variables in the SQL query
         const replacedQuery = await VariableDetector.detectAndReplaceVariables(sqlQuery, documentText);
         this.outputChannel.appendLine(`Running query: ${replacedQuery}`);
@@ -41,7 +48,7 @@ export class CodeActionProvider implements vscode.CodeActionProvider {
         if (selectedText && this.database) {
             const runQueryAction = new vscode.CodeAction("Run Selected SQL Query", vscode.CodeActionKind.QuickFix);
             runQueryAction.command = {
-                command: "extension.runSelectedSQLQuery",
+                command: "SQL-PHP.Intellisense.runSelectedSQLQuery",
                 title: "Run Selected SQL Query",
                 arguments: [selectedText, documentText]
             };
@@ -78,10 +85,10 @@ export class CodeActionProvider implements vscode.CodeActionProvider {
         const fieldsStyle = `style="border: 1px solid ${borderColor}; padding: 5px 10px;"`;
 
         // Generate HTML table with field names as headers
-        const tableHeader = `<tr>${fieldNames.map((fieldName) => `<th ${fieldsStyle}>${fieldName}</th>`).join("")}</tr>`;
-        const tableRows = results.map((row) => `<tr ${fieldsStyle}>${fieldNames.map((fieldName) => `<td ${fieldsStyle}>${row[fieldName]}</td>`).join("")}</tr>`).join("");
+        const tableHeader = `<tr>${fieldNames.map((fieldName) => `<th ${fieldsStyle}>${this.escapeHtml(fieldName)}</th>`).join("")}</tr>`;
+        const tableRows = results.map((row) => `<tr>${fieldNames.map((fieldName) => `<td ${fieldsStyle}>${this.escapeHtml(String(row[fieldName] ?? ""))}</td>`).join("")}</tr>`).join("");
 
-        const tableStyle = `style="order: 1px solid ${borderColor}; border-collapse: collapse;"`;
+        const tableStyle = `style="border: 1px solid ${borderColor}; border-collapse: collapse;"`;
 
         return `<table ${tableStyle}>${tableHeader}${tableRows}</table>`;
     }
@@ -92,9 +99,7 @@ export class CodeActionProvider implements vscode.CodeActionProvider {
             this.webViewPanel.webview.html = htmlContent;
             this.webViewPanel.reveal(vscode.ViewColumn.Beside);
         } else {
-            this.webViewPanel = vscode.window.createWebviewPanel("sqlQueryResults", "SQL Query Results", vscode.ViewColumn.Beside, {
-                enableScripts: true
-            });
+            this.webViewPanel = vscode.window.createWebviewPanel("sqlQueryResults", "SQL Query Results", vscode.ViewColumn.Beside);
 
             this.webViewPanel.webview.html = htmlContent;
 
@@ -110,5 +115,18 @@ export class CodeActionProvider implements vscode.CodeActionProvider {
         if (this.webViewPanel) {
             this.webViewPanel.dispose();
         }
+    }
+
+    private isReadOnlyQuery(sqlQuery: string) {
+        return /^(select|show|describe|desc|explain)\b/i.test(sqlQuery.trim());
+    }
+
+    private escapeHtml(value: string) {
+        return value
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
     }
 }

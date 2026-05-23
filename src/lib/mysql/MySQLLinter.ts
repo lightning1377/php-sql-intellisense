@@ -69,9 +69,7 @@ export class MySQLLinter {
 
         const diagnostics: Diagnostic[] = [];
 
-        for (const { query } of queriesData) {
-            const queryStartIndex = documentText.indexOf(query);
-            const queryEndIndex = queryStartIndex + query.length;
+        for (const { query, startIndex: queryStartIndex } of queriesData) {
 
             // Parse the SQL query to extract tables and fields
             const { tables, fields } = this.parseQuery(query);
@@ -80,8 +78,10 @@ export class MySQLLinter {
             for (const table of tables) {
                 if (!dbTables.includes(table)) {
                     const tableStartIndex = documentText.indexOf(table, queryStartIndex);
-                    const tableEndIndex = tableStartIndex + table.length;
-                    diagnostics.push(new Diagnostic(new Range(document.positionAt(tableStartIndex), document.positionAt(tableEndIndex)), `Table name not found in database: ${table}`, DiagnosticSeverity.Error));
+                    if (tableStartIndex >= queryStartIndex) {
+                        const tableEndIndex = tableStartIndex + table.length;
+                        diagnostics.push(new Diagnostic(new Range(document.positionAt(tableStartIndex), document.positionAt(tableEndIndex)), `Table name not found in database: ${table}`, DiagnosticSeverity.Error));
+                    }
                 }
             }
 
@@ -104,14 +104,18 @@ export class MySQLLinter {
                             const cleaned = assigned.replace(/['"‘“’”]/g, "");
                             if (!dbFields[tableName].includes(cleaned)) {
                                 const fieldNameStartIndex = documentText.indexOf(fieldName, queryStartIndex);
-                                const fieldNameEndIndex = fieldNameStartIndex + fieldName.length;
-                                diagnostics.push(new Diagnostic(new Range(document.positionAt(fieldNameStartIndex), document.positionAt(fieldNameEndIndex)), `Field name '${cleaned}' not found in table '${tableName}'`, DiagnosticSeverity.Error));
+                                if (fieldNameStartIndex >= queryStartIndex) {
+                                    const fieldNameEndIndex = fieldNameStartIndex + fieldName.length;
+                                    diagnostics.push(new Diagnostic(new Range(document.positionAt(fieldNameStartIndex), document.positionAt(fieldNameEndIndex)), `Field name '${cleaned}' not found in table '${tableName}'`, DiagnosticSeverity.Error));
+                                }
                             }
                         }
                     } else if (!dbFields[tableName].includes(fieldName)) {
                         const fieldNameStartIndex = documentText.indexOf(fieldName, queryStartIndex);
-                        const fieldNameEndIndex = fieldNameStartIndex + fieldName.length;
-                        diagnostics.push(new Diagnostic(new Range(document.positionAt(fieldNameStartIndex), document.positionAt(fieldNameEndIndex)), `Field name '${fieldName}' not found in table '${tableName}'`, DiagnosticSeverity.Error));
+                        if (fieldNameStartIndex >= queryStartIndex) {
+                            const fieldNameEndIndex = fieldNameStartIndex + fieldName.length;
+                            diagnostics.push(new Diagnostic(new Range(document.positionAt(fieldNameStartIndex), document.positionAt(fieldNameEndIndex)), `Field name '${fieldName}' not found in table '${tableName}'`, DiagnosticSeverity.Error));
+                        }
                     }
                 }
             }

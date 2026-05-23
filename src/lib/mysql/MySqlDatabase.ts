@@ -27,9 +27,9 @@ export class MySqlDatabase {
     public getTableNames = async () => {
         try {
             const results = await this.queryPromise("SHOW TABLES");
-            const tableNames = results.map((row) => row[`Tables_in_${this.connection.config.database?.toLowerCase()}`]);
+            const tableNames = results.map((row) => Object.values(row)[0]);
             return tableNames.map((tableName: string) => {
-                const item = new CompletionItem(tableName, CompletionItemKind.Field);
+                const item = new CompletionItem(tableName, CompletionItemKind.Struct);
                 item.insertText = tableName;
                 item.detail = "Table name";
                 return item;
@@ -42,7 +42,7 @@ export class MySqlDatabase {
     // Method to retrieve field names for a given table
     public getFieldNames = async (tableName: string) => {
         try {
-            const results = await this.queryPromise(`SHOW COLUMNS FROM ${tableName};`);
+            const results = await this.queryPromise(`SHOW COLUMNS FROM ${this.connection.escapeId(tableName)};`);
             const fieldsData = results.map((row) => [row["Field"] as string, row["Type"] as string]);
             return fieldsData.map((fieldData) => {
                 const [fieldName, fieldType] = fieldData;
