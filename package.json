@@ -91,6 +91,7 @@
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
+    "check-release-tag": "node scripts/check-release-tag.js",
     "vsce": "node scripts/package-vsix.js"
   },
   "devDependencies": {

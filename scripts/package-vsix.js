@@ -14,4 +14,9 @@ const result = spawnSync(command, ["package", "--out", outputPath], {
     shell: process.platform === "win32"
 });
 
+if (result.error) {
+    console.error(`Failed to run ${command}. Install project dependencies with npm install.`);
+    console.error(result.error.message);
+}
+
 process.exit(result.status ?? 1);
