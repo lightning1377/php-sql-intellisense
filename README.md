@@ -33,6 +33,37 @@ Current limitations:
 - The extension is optimized for MySQL.
 - Advanced SQL syntax, aliases, and dynamically constructed queries may not always be understood.
 
+## IntelliSense in Action
+
+Below is a conceptual example of the completions, diagnostics, and hovers in action:
+
+```php
+// 1. Table Name Completion
+Database::prepare("SELECT * FROM |");
+//                               ^ Autocomplete triggers: suggests tables ('users', 'products', 'orders')
+
+// 2. Field Name Completion
+Database::prepare("SELECT users.| FROM users");
+//                              ^ Autocomplete triggers: suggests fields from 'users' table
+
+// 3. Diagnostics & Error Highlighting
+Database::prepare("SELECT invalid_field FROM users");
+//                        ~~~~~~~~~~~~~ Diagnostic Error: Field name 'invalid_field' not found in table 'users'
+```
+
+## Underlying Logic & Algorithmic Design
+
+To provide fast and context-aware SQL tooling directly within PHP files, the extension implements the following pipeline:
+
+1. **SQL Extraction (Pattern Matching):**
+   The extension scans the PHP files using optimized regular expressions matching specific static query execution patterns (such as `Database::prepare(...)`).
+2. **Context Resolution (Lexical Parsing):**
+   When autocompletion is triggered, a custom lexical parser evaluates the SQL string preceding the cursor. It tracks whitespace, punctuation, and keyword structures to identify whether the cursor is in a `table` context or a `field` context, and automatically maps aliases to their respective tables.
+3. **AST Construction (SQL Parsing):**
+   The extension passes extracting queries to `node-sql-parser` to construct an Abstract Syntax Tree (AST). By analyzing this AST, it resolves the referenced tables and fields to validate query correctness.
+4. **Schema Inspection & Caching:**
+   Using the configured connection credentials, the extension queries the MySQL database's schema metadata. It caches table names and field maps in-memory to ensure autocomplete suggestions and hover info are displayed with sub-millisecond response times.
+
 ## Requirements
 
 - Visual Studio Code `1.84.0` or newer.
