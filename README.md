@@ -1,5 +1,7 @@
 # SQL-PHP IntelliSense
 
+[![Visual Studio Marketplace Installs](https://badgen.net/vs-marketplace/i/Siavash.php-sql-intellisense?color=blue&icon=vscode)](https://marketplace.visualstudio.com/items?itemName=Siavash.php-sql-intellisense)
+
 SQL-PHP IntelliSense helps PHP projects write MySQL queries with schema-aware completions, lightweight linting, field hovers, and a quick action for running selected SQL.
 
 The extension connects to your MySQL database, reads table and column metadata, and uses that schema while you edit SQL strings in PHP files.
@@ -73,9 +75,9 @@ To provide fast and context-aware SQL tooling directly within PHP files, the ext
 
 1. Install the extension.
 2. Open VS Code settings and configure:
-   - `SQL-PHP.Intellisense.database.host`
-   - `SQL-PHP.Intellisense.database.port`
-   - `SQL-PHP.Intellisense.database.name`
+    - `SQL-PHP.Intellisense.database.host`
+    - `SQL-PHP.Intellisense.database.port`
+    - `SQL-PHP.Intellisense.database.name`
 3. Run `SQL-PHP: Connect to MySQL Database` from the command palette.
 4. Enter the database username and password when prompted.
 
@@ -83,19 +85,19 @@ Credentials are stored with VS Code SecretStorage. Run `SQL-PHP: Delete Database
 
 ## Commands
 
-| Command | Description |
-| --- | --- |
-| `SQL-PHP: Connect to MySQL Database` | Connects to the configured MySQL database and loads schema metadata. |
-| `SQL-PHP: Lint MySQL Queries` | Lints SQL queries in the active PHP document. |
-| `SQL-PHP: Delete Database Credentials` | Removes the stored username and password. |
+| Command                                | Description                                                          |
+| -------------------------------------- | -------------------------------------------------------------------- |
+| `SQL-PHP: Connect to MySQL Database`   | Connects to the configured MySQL database and loads schema metadata. |
+| `SQL-PHP: Lint MySQL Queries`          | Lints SQL queries in the active PHP document.                        |
+| `SQL-PHP: Delete Database Credentials` | Removes the stored username and password.                            |
 
 ## Extension Settings
 
-| Setting | Default | Description |
-| --- | --- | --- |
-| `SQL-PHP.Intellisense.database.host` | `localhost` | MySQL server host name or IP address. |
-| `SQL-PHP.Intellisense.database.port` | `3306` | MySQL server port. |
-| `SQL-PHP.Intellisense.database.name` | empty | Name of the MySQL database to inspect. |
+| Setting                              | Default     | Description                            |
+| ------------------------------------ | ----------- | -------------------------------------- |
+| `SQL-PHP.Intellisense.database.host` | `localhost` | MySQL server host name or IP address.  |
+| `SQL-PHP.Intellisense.database.port` | `3306`      | MySQL server port.                     |
+| `SQL-PHP.Intellisense.database.name` | empty       | Name of the MySQL database to inspect. |
 
 ## Development
 
@@ -128,3 +130,14 @@ Issues and pull requests are welcome on the [GitHub repository](https://github.c
 ## License
 
 MIT
+
+## Support the Project ⭐
+
+With over **5,000+ active installations** on the VS Code Marketplace, this extension is driven entirely by community utility. If this tool saves you a few context-switches or protects you from a broken query deployment today, please consider supporting its ongoing development:
+
+- **Star this repository** to improve its visibility on GitHub so other developers can discover it.
+- **Leave a review** on the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=Siavash.php-sql-intellisense&ssr=false#review-details) sharing your favorite feature or setup.
+
+### Feedback & Contributing
+
+Found a bug or have a feature request? Please feel free to open an issue or submit a pull request. Your feedback helps make local SQL context mapping better for everyone.
