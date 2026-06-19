@@ -4,7 +4,7 @@
   "icon": "images/php_mysql.png",
   "publisher": "Siavash",
   "description": "MySQL IntelliSense, linting, hovers, and query helpers for PHP database calls.",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "license": "MIT",
   "repository": {
     "type": "git",
