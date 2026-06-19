@@ -19,7 +19,7 @@ The extension connects to your MySQL database, reads table and column metadata, 
 
 ## Supported PHP Patterns
 
-SQL extraction currently targets string literals passed to these static calls:
+By default, SQL extraction targets string literals (single or double-quoted) passed to these static calls:
 
 ```php
 Database::prepare("SELECT id, name FROM users");
@@ -29,11 +29,24 @@ Database::getRow("SELECT * FROM users WHERE id = :id");
 Database::PrepareExecuteTC("SELECT * FROM users");
 ```
 
+### Customizable Patterns & Heredoc/Nowdoc
+
+You can customize the function and method names that trigger SQL extraction using the `SQL-PHP.Intellisense.extractionPatterns` setting (e.g., adding `$db->query` or `PDO::prepare`).
+
+The extension also automatically detects SQL queries declared in PHP **Heredoc** and **Nowdoc** blocks using `SQL` or `MYSQL` identifiers:
+
+```php
+$query = <<<SQL
+SELECT id, name
+FROM users
+WHERE status = 'active'
+SQL;
+```
+
 Current limitations:
 
-- Queries must be quoted string literals.
 - The extension is optimized for MySQL.
-- Advanced SQL syntax, aliases, and dynamically constructed queries may not always be understood.
+- Dynamically constructed queries (e.g., string concatenation) may not always be fully understood.
 
 ## IntelliSense in Action
 
@@ -93,11 +106,12 @@ Credentials are stored with VS Code SecretStorage. Run `SQL-PHP: Delete Database
 
 ## Extension Settings
 
-| Setting                              | Default     | Description                            |
-| ------------------------------------ | ----------- | -------------------------------------- |
-| `SQL-PHP.Intellisense.database.host` | `localhost` | MySQL server host name or IP address.  |
-| `SQL-PHP.Intellisense.database.port` | `3306`      | MySQL server port.                     |
-| `SQL-PHP.Intellisense.database.name` | empty       | Name of the MySQL database to inspect. |
+| Setting                                  | Default                                                    | Description                                                                                  |
+| ---------------------------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `SQL-PHP.Intellisense.database.host`      | `localhost`                                                | MySQL server host name or IP address.                                                        |
+| `SQL-PHP.Intellisense.database.port`      | `3306`                                                     | MySQL server port.                                                                           |
+| `SQL-PHP.Intellisense.database.name`      | empty                                                      | Name of the MySQL database to inspect.                                                       |
+| `SQL-PHP.Intellisense.extractionPatterns` | `["Database::prepare", "Database::getResults", ...]`       | List of PHP method or function names (e.g., `$db->query`) to extract SQL query strings from. |
 
 ## Development
 
