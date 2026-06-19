@@ -76,6 +76,20 @@
             "type": "string",
             "default": "",
             "description": "Name of the MySQL database to inspect for tables and columns."
+          },
+          "SQL-PHP.Intellisense.extractionPatterns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": [
+              "Database::prepare",
+              "Database::getResults",
+              "Database::getValue",
+              "Database::getRow",
+              "Database::PrepareExecuteTC"
+            ],
+            "description": "List of PHP method/function names (e.g. 'Database::prepare', '$db->query') to extract SQL queries from."
           }
         }
       }

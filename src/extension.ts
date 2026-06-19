@@ -17,7 +17,7 @@ export function activate(context: vscode.ExtensionContext) {
     // Register Completion Provider
     const completionProvider = new MySQLCompletionProvider(outputChannel);
     // Trigger characters for auto-completion
-    const triggerCharacters = ['"', "`"];
+    const triggerCharacters = ['"', "'", "`", "."];
     const disposableCompletion = vscode.languages.registerCompletionItemProvider({ language: "php" }, completionProvider, ...triggerCharacters);
     context.subscriptions.push(disposableCompletion);
 

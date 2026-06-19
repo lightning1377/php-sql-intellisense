@@ -41,17 +41,44 @@ export async function removeDbCredentials(context: vscode.ExtensionContext) {
 
 // Function to extract SQL queries from text
 export function extractSQLQueries(text: string): { query: string; startIndex: number }[] {
-    // Regular expression to match supported database call patterns.
-    const sqlQueryRegex = /Database::(prepare|getResults|getValue|getRow|PrepareExecuteTC)\(\s*(["'])((?:\\.|(?!\2)[\s\S])+)\2/g;
     const matches: { query: string; startIndex: number }[] = [];
-    let match;
+    
+    const patterns = vscode.workspace.getConfiguration("SQL-PHP.Intellisense").get<string[]>("extractionPatterns") || [
+        "Database::prepare",
+        "Database::getResults",
+        "Database::getValue",
+        "Database::getRow",
+        "Database::PrepareExecuteTC"
+    ];
 
-    // Iterate over text to find SQL query matches
-    while ((match = sqlQueryRegex.exec(text)) !== null) {
-        const query = match[3];
-        const queryStartIndex = match.index + match[0].indexOf(query);
-        // Store the matched query and its starting index
-        matches.push({ query, startIndex: queryStartIndex });
+    // 1. Match configured method/function patterns
+    if (patterns.length > 0) {
+        const escapedPatterns = patterns.map(p => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+        // Match patterns like: method('sql') or method("sql")
+        const methodRegex = new RegExp(`(?:${escapedPatterns})\\s*\\(\\s*(['"])((?:\\\\.|(?!\\1)[\\s\\S])*?)\\1`, 'g');
+        let match;
+        while ((match = methodRegex.exec(text)) !== null) {
+            const query = match[2];
+            const queryStartIndex = match.index + match[0].indexOf(query);
+            matches.push({ query, startIndex: queryStartIndex });
+        }
+    }
+
+    // 2. Match Heredoc / Nowdoc syntax with SQL or MYSQL identifiers
+    const heredocRegex = /<<<\s*(['"]?)(SQL|MYSQL)\1\r?\n([\s\S]*?)\r?\n\s*\2\b/gi;
+    let hMatch;
+    while ((hMatch = heredocRegex.exec(text)) !== null) {
+        const query = hMatch[3];
+        const queryStartIndex = hMatch.index + hMatch[0].indexOf(query);
+        
+        // Check for overlap to avoid duplicate matching
+        const overlaps = matches.some(m => 
+            (queryStartIndex >= m.startIndex && queryStartIndex < m.startIndex + m.query.length) ||
+            (m.startIndex >= queryStartIndex && m.startIndex < queryStartIndex + query.length)
+        );
+        if (!overlaps) {
+            matches.push({ query, startIndex: queryStartIndex });
+        }
     }
 
     return matches;

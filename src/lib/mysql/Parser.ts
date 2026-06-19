@@ -80,11 +80,11 @@ export function parser(queryString: string, pointerIndex: number): ParsedQuery {
             } else if (isFieldContext || fromIndex > _pointerIndex) {
                 context = "field";
                 if (characterBeforePointer === ".") {
-                    let tableNameAliasStartIndex = indexOfCharacterBeforePointer;
-                    while (queryString[tableNameAliasStartIndex] !== " " && tableNameAliasStartIndex > 0) {
+                    let tableNameAliasStartIndex = indexOfCharacterBeforePointer - 1;
+                    while (tableNameAliasStartIndex >= 0 && /[a-zA-Z0-9_`]/.test(queryString[tableNameAliasStartIndex])) {
                         tableNameAliasStartIndex--;
                     }
-                    const tableNameAlias = queryString.substring(tableNameAliasStartIndex + 1, indexOfCharacterBeforePointer);
+                    const tableNameAlias = queryString.substring(tableNameAliasStartIndex + 1, indexOfCharacterBeforePointer).replace(/`/g, "");
                     const tableObj = tables.find((tb) => tb.name === tableNameAlias || tb.alias === tableNameAlias);
                     if (tableObj) {
                         fromTable = tableObj.name;
@@ -168,10 +168,23 @@ export function parser(queryString: string, pointerIndex: number): ParsedQuery {
             const endIndex = nextJoinClause ? remainingPart.indexOf(nextJoinClause) : remainingPart.length;
             const part = remainingPart.substring(0, endIndex).trim();
             index += endIndex + (nextJoinClause ? nextJoinClause.length : 0);
-            const joinParts = part.split(/\s+/);
-            const name = joinParts[0];
-            const alias = joinParts[2] || "";
-            tables.push({ name, alias });
+            
+            const joinParts = part.split(/\s+/).filter(p => p.length > 0);
+            if (joinParts.length > 0) {
+                const name = joinParts[0].replace(/`/g, "");
+                let alias = "";
+                if (joinParts.length > 1) {
+                    const secondWord = joinParts[1].toUpperCase();
+                    if (secondWord === "AS") {
+                        if (joinParts.length > 2) {
+                            alias = joinParts[2].replace(/`/g, "");
+                        }
+                    } else if (!["ON", "USING", "WHERE", "GROUP", "ORDER", "LIMIT", "LEFT", "RIGHT", "INNER", "JOIN"].includes(secondWord)) {
+                        alias = joinParts[1].replace(/`/g, "");
+                    }
+                }
+                tables.push({ name, alias });
+            }
         } while (index < tablePart.length);
 
         // Function to get the first JOIN clause
