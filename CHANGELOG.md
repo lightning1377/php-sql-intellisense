@@ -4,6 +4,19 @@ All notable changes to the "php-sql-intellisense" extension will be documented i
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-06-19
+
+- Fixed npm audit vulnerability by overriding `serialize-javascript` to `^7.0.6`.
+- Resolved TypeScript compiler errors when compiling tests.
+
+## [0.5.0] - 2026-06-19
+
+- Added configurable SQL extraction patterns through the new `SQL-PHP.Intellisense.extractionPatterns` setting.
+- Added support for extracting SQL from PHP Heredoc and Nowdoc syntax using `SQL` or `MYSQL` identifiers.
+- Improved table alias parsing in the MySQL parser to support space-separated aliases (with or without `AS`) and avoid capturing clauses like `ON ...` as aliases.
+- Improved autocomplete triggers by adding single quote (`'`) and dot (`.`) to the trigger characters list.
+- Fixed table/alias prefix retrieval for column auto-completions before the `.` operator.
+
 ## [0.4.0]
 
 - Added configurable MySQL port support through `SQL-PHP.Intellisense.database.port`.
