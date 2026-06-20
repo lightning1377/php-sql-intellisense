@@ -34,10 +34,10 @@ export class MySQLCompletionProvider implements CompletionItemProvider {
         const { query, startIndex } = queryData;
         const cleanedQuery = query.replace(/\s+/g, " ");
         const queryPointerIndex = pointerIndex - startIndex;
-        const restOfQuery = query.substring(queryPointerIndex).replace(/\s+/g, " ");
 
-        // Adjust the pointer index for the cleaned query
-        const cleanedQueryPointerIndex = cleanedQuery.indexOf(restOfQuery);
+        // Adjust the pointer index for the cleaned query by cleaning the prefix up to the cursor
+        const cleanedQueryBeforeCursor = query.substring(0, queryPointerIndex).replace(/\s+/g, " ");
+        const cleanedQueryPointerIndex = cleanedQueryBeforeCursor.length;
 
         // Parse the SQL query to determine context (table or field)
         const res = parser(cleanedQuery, cleanedQueryPointerIndex);

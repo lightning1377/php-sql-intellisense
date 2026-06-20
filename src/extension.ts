@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import { MySQLCompletionProvider } from "./lib/mysql/MySQLCompletionProvider";
 import { getDbCredentials, removeDbCredentials } from "./lib/helpers";
-import { MySQLLinter } from "./lib/mysql/MySQLLinter";
+import { MySQLLinter } from "./lib/mysql/linter";
 import { MySqlDatabase } from "./lib/mysql/MySqlDatabase";
 import { HoverProvider } from "./lib/mysql/HoverProvider";
 import { CodeActionProvider } from "./lib/mysql/CodeActionProvider";

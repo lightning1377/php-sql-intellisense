@@ -74,7 +74,7 @@ export function parser(queryString: string, pointerIndex: number): ParsedQuery {
             const isFieldContext = FIELD_NAME_KEYWORDS.includes(firstKeyword);
 
             if (!isFieldContext && fromIndex + QueryKeyword.FROM.length < _pointerIndex) {
-                if ([",", " "].includes(characterBeforePointer)) {
+                if ([",", " ", "`"].includes(characterBeforePointer)) {
                     context = "table";
                 }
             } else if (isFieldContext || fromIndex > _pointerIndex) {
@@ -89,7 +89,7 @@ export function parser(queryString: string, pointerIndex: number): ParsedQuery {
                     if (tableObj) {
                         fromTable = tableObj.name;
                     }
-                } else if ([",", " "].includes(characterBeforePointer) && tables.length === 1) {
+                } else if ([",", " ", "`"].includes(characterBeforePointer) && tables.length === 1) {
                     fromTable = tables[0].name;
                 }
             }
@@ -112,12 +112,12 @@ export function parser(queryString: string, pointerIndex: number): ParsedQuery {
             const indexOfSpecificColumnsPart = query.indexOf(specificColumnsPart ?? "");
             const isFieldContext = indexOfSpecificColumnsPart > 0 && specificColumnsPart ? _pointerIndex > indexOfSpecificColumnsPart && _pointerIndex < indexOfSpecificColumnsPart + specificColumnsPart.length : false;
             if (!isFieldContext && ((valuesIndex === -1 && selectIndex === -1) || _pointerIndex < valuesIndex || _pointerIndex < selectIndex)) {
-                if ([",", " "].includes(characterBeforePointer)) {
+                if ([",", " ", "`"].includes(characterBeforePointer)) {
                     context = "table";
                 }
             } else if (isFieldContext || (valuesIndex !== -1 && _pointerIndex > valuesIndex + QueryKeyword.VALUES.length) || (selectIndex !== -1 && _pointerIndex > selectIndex + QueryKeyword.SELECT.length)) {
                 if (selectIndex === -1 || _pointerIndex < selectIndex) {
-                    if ([",", " ", "("].includes(characterBeforePointer)) {
+                    if ([",", " ", "(", "`"].includes(characterBeforePointer)) {
                         context = "field";
                         fromTable = tablePart.replace(specificColumnsPart ?? "", "");
                     }
@@ -139,7 +139,7 @@ export function parser(queryString: string, pointerIndex: number): ParsedQuery {
             const indexOfCharacterBeforePointer = _pointerIndex - 1;
             const characterBeforePointer = queryString[indexOfCharacterBeforePointer];
             const tablePart = query.substring(QueryKeyword.UPDATE.length, setIndex).trim();
-            if ([",", " "].includes(characterBeforePointer)) {
+            if ([",", " ", "`"].includes(characterBeforePointer)) {
                 if (setIndex === -1 || _pointerIndex < setIndex) {
                     context = "table";
                 } else {
