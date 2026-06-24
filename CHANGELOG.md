@@ -4,6 +4,12 @@ All notable changes to the "php-sql-intellisense" extension will be documented i
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-06-24
+
+- Added comprehensive UI testing framework using `vscode-extension-tester` to automate end-to-end testing of extension features.
+- Improved code quality with refined ESLint configuration for better TypeScript formatting standards.
+- Updated documentation with detailed examples of Heredoc/Nowdoc SQL syntax and `extractionPatterns` configuration support.
+
 ## [0.5.1] - 2026-06-19
 
 - Fixed npm audit vulnerability by overriding `serialize-javascript` to `^7.0.6`.
