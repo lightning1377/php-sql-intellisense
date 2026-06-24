@@ -117,6 +117,80 @@ export function activate(context: vscode.ExtensionContext) {
             await codeActionProvider.runSqlQuery(sqlQuery, documentText);
         })
     );
+
+    // If running in mock database mode (e.g. for UI automation / screenshots), seed fake tables/fields
+    const isMockDatabase = process.env.SQL_PHP_MOCK_DATABASE === "true" ||
+                           vscode.workspace.getConfiguration("SQL-PHP.Intellisense").get("mockDatabase") === true;
+    if (isMockDatabase) {
+        const createMockTableItem = (name: string) => {
+            const item = new vscode.CompletionItem(name, vscode.CompletionItemKind.Struct);
+            item.insertText = name;
+            item.detail = "Table name";
+            return item;
+        };
+
+        const createMockFieldItem = (name: string) => {
+            const item = new vscode.CompletionItem(name, vscode.CompletionItemKind.Field);
+            item.insertText = name;
+            item.detail = "Field name";
+            return item;
+        };
+
+        const mockDatabase = {
+            getTableNames: async () => [
+                createMockTableItem("users"),
+                createMockTableItem("orders"),
+                createMockTableItem("products")
+            ],
+            getFieldNames: async (tableName: string) => {
+                if (tableName === "users") {
+                    return [
+                        createMockFieldItem("id"),
+                        createMockFieldItem("username"),
+                        createMockFieldItem("email")
+                    ];
+                }
+                return [
+                    createMockFieldItem("id"),
+                    createMockFieldItem("created_at")
+                ];
+            },
+            getFieldType: (tableName: string, fieldName: string) => {
+                if (tableName === "users") {
+                    if (fieldName === "id") return "int(11)";
+                    if (fieldName === "username") return "varchar(255)";
+                    if (fieldName === "email") return "varchar(255)";
+                } else {
+                    if (fieldName === "id") return "int(11)";
+                    if (fieldName === "created_at") return "datetime";
+                }
+                return "";
+            },
+            runQuery: async (query: string) => {
+                const normalizedQuery = query.toLowerCase().trim();
+                if (normalizedQuery.includes("from `users`") || normalizedQuery.includes("from users")) {
+                    return [
+                        { id: 1, username: "john_doe", email: "john@example.com" },
+                        { id: 2, username: "jane_doe", email: "jane@example.com" }
+                    ];
+                }
+                if (normalizedQuery.includes("from `orders`") || normalizedQuery.includes("from orders")) {
+                    return [
+                        { id: 101, created_at: "2026-06-20 12:00:00" },
+                        { id: 102, created_at: "2026-06-20 13:00:00" }
+                    ];
+                }
+                return [];
+            },
+            getIsConnected: async () => true,
+            destroy: async () => {}
+        } as unknown as MySqlDatabase;
+
+        linter.setDb(mockDatabase);
+        completionProvider.setDb(mockDatabase);
+        hoverProvider.setDb(mockDatabase);
+        codeActionProvider.setDb(mockDatabase);
+    }
 }
 
 // This method is called when your extension is deactivated

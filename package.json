@@ -90,6 +90,11 @@
               "Database::PrepareExecuteTC"
             ],
             "description": "List of PHP method/function names (e.g. 'Database::prepare', '$db->query') to extract SQL queries from."
+          },
+          "SQL-PHP.Intellisense.mockDatabase": {
+            "type": "boolean",
+            "default": false,
+            "description": "Enable mock database connections for test and screenshot automation."
           }
         }
       }
@@ -105,6 +110,8 @@
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
+    "preui-test": "npm run compile-tests && npm run compile",
+    "ui-test": "extest setup-and-run -o src/ui-test/ui-test-settings.json out/ui-test/**/*.js",
     "check-release-tag": "node scripts/check-release-tag.js",
     "vsce": "node scripts/package-vsix.js"
   },
@@ -123,6 +130,7 @@
     "node-sql-parser": "^4.12.0",
     "ts-loader": "^9.5.0",
     "typescript": "^5.2.2",
+    "vscode-extension-tester": "^8.23.0",
     "webpack": "^5.89.0",
     "webpack-cli": "^5.1.4"
   },

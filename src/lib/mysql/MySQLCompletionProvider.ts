@@ -1,4 +1,4 @@
-import { CompletionItemProvider, TextDocument, Position, CancellationToken, OutputChannel, CompletionItem } from "vscode";
+import { CompletionItemProvider, TextDocument, Position, CancellationToken, OutputChannel, CompletionItem, CompletionItemKind, Range } from "vscode";
 import { extractSQLQueries } from "../helpers";
 import { MySqlDatabase } from "./MySqlDatabase";
 import { parser } from "./Parser";
@@ -49,7 +49,20 @@ export class MySQLCompletionProvider implements CompletionItemProvider {
         // Provide completion items based on the context
         const { context, fromTable } = res;
         if (context === "table") {
-            return await this.database.getTableNames();
+            const items = await this.database.getTableNames();
+            const textBeforeCursor = document.getText(new Range(new Position(0, 0), position));
+            const hasOpeningBacktick = textBeforeCursor.endsWith("`");
+            return items.map((item) => {
+                const newItem = new CompletionItem(item.label, item.kind);
+                newItem.detail = item.detail;
+                const baseText = typeof item.insertText === "string" ? item.insertText : (typeof item.label === "string" ? item.label : item.label.label);
+                if (hasOpeningBacktick) {
+                    newItem.insertText = baseText + "`";
+                } else {
+                    newItem.insertText = item.insertText;
+                }
+                return newItem;
+            });
         }
 
         if (context === "field" && fromTable) {

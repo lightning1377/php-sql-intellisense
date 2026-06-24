@@ -1,0 +1,6 @@
+{
+  "SQL-PHP.Intellisense.mockDatabase": true,
+  "window.title": "SQL-PHP IntelliSense",
+  "breadcrumbs.enabled": false,
+  "editor.minimap.enabled": false
+}
